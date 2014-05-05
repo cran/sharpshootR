@@ -1,11 +1,11 @@
-b45d173f89b7e4a29ceee468f65582c1 *DESCRIPTION
+4c12ad22be6ba754a5c6ccd5e9136b87 *DESCRIPTION
 42d2d2bb08864896a9222a8765e25928 *NAMESPACE
 0a195aad0298037248ee858bea675012 *R/CDECquery.R
 c2cc382ee25ad0483d0c14316cd04bce *R/CDECsnowQuery.R
 081e2149eb40389ac67d6edf06fa122e *R/SoilTaxonomyDendrogram.R
 223a171a599df516973c2b5fe3a9ac05 *R/aspect.plot.R
 d34c29c2abb5bd3a88e96c044fc13c65 *R/component.adj.matrix.R
-7844344fa8fcc34bdc7a0fd946e366a9 *R/diagnosticPropertyPlot.R
+d6a28546dfea4ffc10ff6197bdecb9d1 *R/diagnosticPropertyPlot.R
 4a0da49c10b2a51e7827319f20f91ab6 *R/dueling.dendrograms.R
 fa73f139bf6e80187a553455d71f44f6 *R/hillslope.probability.R
 7df554cd3ea97e2d5a83c74c2411850a *R/plotSoilRelationGraph.R
@@ -16,7 +16,7 @@ fa73f139bf6e80187a553455d71f44f6 *R/hillslope.probability.R
 be70c8794981a5f6c9d21de2db513136 *man/CDEC.snow.courses.Rd
 8111ef79e551997f5ec95bcb4a09f6c2 *man/CDECquery.Rd
 6bf93177fd3c2717d00b64aa3b09c649 *man/CDECsnowQuery.Rd
-94722f7cdf90ecf4c95f8bd7a738e291 *man/SoilTaxonomyDendrogram.Rd
+a86de4a54845b9cee4e345c700678868 *man/SoilTaxonomyDendrogram.Rd
 3dfeede14479193674fd02a630815d5d *man/amador.Rd
 860fca73c1a156c9f3d2bd806e0dd65f *man/aspect.plot.Rd
 ad2063098cdf3eeae813a7eb67406eaf *man/component.adj.matrix.Rd
