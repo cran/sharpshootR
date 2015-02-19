@@ -1,3 +1,5 @@
+## TODO: figure out a better approach for alignment of dendrogram / image axis labels
+
 # f: SPC with diagnostic boolean variables
 # v: named variables
 # k: number of groups to highlight
@@ -6,6 +8,9 @@ diagnosticPropertyPlot <- function(f, v, k, id='pedon_id') {
   
   # extract site data
   s <- site(f)
+  
+  # keep only those variables that exist
+  v <- names(s)[na.omit(match(v, names(s)))]
   
   ## TODO: why would there be NA in here?
   # filter NA
@@ -49,11 +54,12 @@ diagnosticPropertyPlot <- function(f, v, k, id='pedon_id') {
     
   # plot profile dendrogram
   par(mar=c(1,1,6,1))
-  plot(p, cex=0.75, label.offset=0.05, y.lim=c(1.5, n.profiles-0.5))
+  plot(p, cex=0.75, label.offset=0.05, y.lim=c(1.125, n.profiles))
   tiplabels(pch=15, col=h.cut, cex=1.125, adj=0.52)
   
+  ## note: transpose converts logical -> character, must re-init factors
   # compute dissimilarity between variables
-  d.vars <- daisy(as.data.frame(t(m)), metric='gower')
+  d.vars <- daisy(data.frame(t(m), stringsAsFactors=TRUE), metric='gower')
   h.vars <- as.hclust(diana(d.vars))
   
   # order of profiles in dendrogram
@@ -82,6 +88,9 @@ diagnosticPropertyPlot2 <- function(f, v, k, id='pedon_id') {
     
   # extract site data
   s <- site(f)
+  
+  # keep only those variables that exist
+  v <- names(s)[na.omit(match(v, names(s)))]
   
   ## TODO: why would there be NA in here?
   # filter NA
@@ -112,8 +121,9 @@ diagnosticPropertyPlot2 <- function(f, v, k, id='pedon_id') {
   d <- daisy(m, metric='gower')
   h.profiles <- as.hclust(diana(d))
   
+  ## note: transpose converts logical -> character, must re-init factors
   # compute dissimilarity between variables
-  d.vars <- daisy(as.data.frame(t(m)), metric='gower')
+  d.vars <- daisy(data.frame(t(m), stringsAsFactors=TRUE), metric='gower')
   h.vars <- as.hclust(diana(d.vars))
   
   # cut tree at user-specified number of groups
