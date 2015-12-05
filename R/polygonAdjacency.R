@@ -1,17 +1,19 @@
-polygonAdjacency <- function(x, v='MUSYM') {
+
+# optional arguments are passed to poly2nb
+polygonAdjacency <- function(x, v='MUSYM', ...) {
   
   # sanity check: package requirements
   if(!requireNamespace('spdep'))
     stop('please install the `spdep` package', call. = FALSE)
   
   # compute neighbor list
-  nb <- spdep::poly2nb(x)
+  nb <- spdep::poly2nb(x, ...)
   
   # init empty list to store common attribute polygon IDs
   # list index references the original polygon number
   # each list item contains indexes to neighbors with the same map unit symbol
   common.polys <- list()
-  
+    
   # init empy list to store adjacency information via attribute `v`
   edge.list <- list()
   
@@ -24,12 +26,15 @@ polygonAdjacency <- function(x, v='MUSYM') {
     this.nb <- x[[v]][n.idx]
     # get an index to those neighbors that share the same symbol
     common.symbol.idx <- which(this.attr == this.nb)
+    
     # store index to polygons with the same symbol
     common.polys[[i]] <- n.idx[common.symbol.idx]
+    
     # store edge list information
+    # if there is no matching neighbor, then pad with NA
     if(length(this.nb) == 0)
       this.nb <- NA
-    edge.list[[i]] <- cbind(this.attr, this.nb)
+    edge.list[[i]] <- cbind(this.attr, this.nb)   
   }
   
   # get a unique set of polygon indices to investigate
