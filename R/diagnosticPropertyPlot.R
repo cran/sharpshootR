@@ -1,10 +1,21 @@
 ## TODO: figure out a better approach for alignment of dendrogram / image axis labels
+## TODO: fix sort.vars behavior...
+
 
 # f: SPC with diagnostic boolean variables
 # v: named variables
 # k: number of groups to highlight
 # id: id to print next to dendrogram
-diagnosticPropertyPlot <- function(f, v, k, grid.label='pedon_id', dend.label='pedon_id') {
+# sort.vars: should variables be sorted according to similarity?
+diagnosticPropertyPlot <- function(f, v, k, grid.label='pedon_id', dend.label='pedon_id', sort.vars=TRUE) {
+  
+  # setup colors
+  if(k <= 9 & k > 2) 
+    cols <- brewer.pal(n=k, name='Set1') 
+  if(k < 3) 
+    cols <- brewer.pal(n=3, name='Set1')
+  if(k > 9)
+    cols <- colorRampPalette(brewer.pal(n=9, name='Set1'))(k)
   
   # get internal, unique ID
   id <- idname(f)
@@ -56,11 +67,23 @@ diagnosticPropertyPlot <- function(f, v, k, grid.label='pedon_id', dend.label='p
   n.vars <- ncol(m)
   n.profiles <- nrow(m)
     
-  # plot profile dendrogram
-  par(mar=c(1,1,6,1))
-  plot(p, cex=0.75, label.offset=0.05, y.lim=c(1.125, n.profiles))
-  tiplabels(pch=15, col=h.cut, cex=1.125, adj=0.52)
+  ### BUG: this doesn't use the margins as specified
+  # plot dendrogram
+  par(mar=c(0.5,1,5.5,1))
   
+  ### possible fix?
+  # setup plotting region
+  # plot(1,1, type='n', axes=FALSE, xlab='', ylab='', ylim=c(0.5, n.profiles+0.5))
+  # par(new=TRUE)
+  
+  plot(p, cex=0.75, label.offset=0.05, y.lim=c(1.125, n.profiles))
+  tiplabels(pch=15, col=cols[h.cut], cex=1.125, adj=0.52)
+  
+  ### debug:
+#   par(xpd=TRUE)
+#   abline(h=seq(1, n.profiles))
+#   par(xpd=FALSE)
+#   
   ## note: transpose converts logical -> character, must re-init factors
   # compute dissimilarity between variables
   d.vars <- daisy(data.frame(t(m), stringsAsFactors=TRUE), metric='gower')
@@ -69,16 +92,25 @@ diagnosticPropertyPlot <- function(f, v, k, grid.label='pedon_id', dend.label='p
   # order of profiles in dendrogram
   o.profiles <- h.profiles$order
   
+  ## TODO this isn't working as expected
   # vector of variable names as plotted in dendrogram
-  o.vars <- h.vars$order
+  if(sort.vars)
+    o.vars <- h.vars$order
+  else
+    o.vars <- 1:length(v)
   
   # plot image matrix, with rows re-ordered according to dendrogram
   par(mar=c(1,6,6,1))
   image(x=1:n.vars, y=1:n.profiles, z=m.plot[o.vars, o.profiles], axes=FALSE, col=c(grey(0.9), 'RoyalBlue'), xlab='', ylab='', ylim=c(0.5, n.profiles+0.5))
-  axis(side=2, at=1:n.profiles, labels=s[[grid.label]][o.profiles], las=1, cex.axis=0.75)
+  axis(side=2, at=1:n.profiles, labels=s[[grid.label]][o.profiles], las=1, cex.axis=0.75, tick = FALSE)
   axis(side=3, at=1:n.vars, labels=v[o.vars], las=2, cex.axis=0.75)
   abline(h=1:(n.profiles+1)-0.5)
   abline(v=1:(n.vars+1)-0.5)
+  # plot outside of plotting region
+  par(xpd=TRUE)
+  # this may require some tinkering
+  points(x=rep(0.35, times=n.profiles), y=1:n.profiles, col=cols[h.cut][o.profiles], pch=15)
+  par(xpd=FALSE)
   
   # return values
   rd <- cbind(s[, c(id, grid.label)], g=h.cut)
@@ -86,8 +118,17 @@ diagnosticPropertyPlot <- function(f, v, k, grid.label='pedon_id', dend.label='p
 }
 
 
-
-diagnosticPropertyPlot2 <- function(f, v, k, grid.label='pedon_id') {
+# similar version with lattice
+diagnosticPropertyPlot2 <- function(f, v, k, grid.label='pedon_id', sort.vars=TRUE) {
+  
+  # setup colors
+  if(k <= 9 & k > 2) 
+    cols <- brewer.pal(n=k, name='Set1') 
+  if(k < 3) 
+    cols <- brewer.pal(n=3, name='Set1')
+  if(k > 9)
+    cols <- colorRampPalette(brewer.pal(n=9, name='Set1'))(k)
+  
   
   # get internal, unique ID
   id <- idname(f)
@@ -147,8 +188,12 @@ diagnosticPropertyPlot2 <- function(f, v, k, grid.label='pedon_id') {
   # order of profiles in dendrogram
   o.profiles <- h.profiles$order
   
+  ## TODO this isn't working as expected
   # vector of variable names as plotted in dendrogram
-  o.vars <- h.vars$order
+  if(sort.vars)
+    o.vars <- h.vars$order
+  else
+    o.vars <- 1:length(v)
   
   # set factor levels for ordering of level plot
   m.plot.long$id <- factor(m.plot.long$id, levels=m.plot$id[o.profiles])
@@ -160,8 +205,8 @@ diagnosticPropertyPlot2 <- function(f, v, k, grid.label='pedon_id') {
   colorkey = FALSE, 
   scales=list(tck=0, x=list(rot=90), y=list(at=1:length(o.profiles), labels=s.gl[o.profiles])),
   legend=list(
-      right=list(fun=dendrogramGrob, args=list(x = as.dendrogram(h.profiles), side="right", size=15, add=list(
-        rect=list(fill=h.cut, cex=0.5)))),
+      right=list(fun=dendrogramGrob, args=list(x = as.dendrogram(h.profiles), side="right", size=10, add=list(
+        rect=list(fill=cols[h.cut])))),
       top=list(fun=dendrogramGrob, args=list(x=as.dendrogram(h.vars), side="top", size=4))
       ),
   panel=function(...) {

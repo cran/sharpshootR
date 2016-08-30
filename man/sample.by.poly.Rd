@@ -1,6 +1,5 @@
 \name{sample.by.poly}
 \alias{sample.by.poly}
-\alias{constantDensitySampling}
 
 \title{Sample a Polygon at Fixed Density}
 \description{Generate sampling points within a SpatialPolygon object, according to a specified sampling density.}
@@ -8,7 +7,7 @@
 sampling.type='hexagonal', iterations=10, p4s=NULL)}
 
 \arguments{
-  \item{p}{a Polygon object, with coordinates in a projected CRS}
+  \item{p}{a Polygon object, with coordinates in a projected CRS with units of meters}
   \item{n.pts.per.ac}{requested sampling density in points per acre (results will be close)}
   \item{min.samples}{minimum requested number of samples per polygon}
   \item{sampling.type}{sampling type, see \code{spsample}}

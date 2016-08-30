@@ -4,7 +4,7 @@ importFrom("grDevices", "colorRampPalette", "grey")
 
 importFrom("graphics", "abline", "arrows", "axis", "image", "layout",
              "legend", "lines", "mtext", "par", "points", "rect",
-             "segments", "strheight", "text")
+             "segments", "strheight", "text", "grid")
 
 importFrom("methods", "as", "slot")
 
@@ -12,7 +12,7 @@ importFrom("stats", "as.dendrogram", "as.formula", "as.hclust",
              "complete.cases", "cutree", "density", "lm", "median",
              "na.omit", "predict", "quantile")
 
-importFrom("utils", "URLencode", "download.file", "read.csv")
+importFrom("utils", "URLencode", "download.file", "read.csv", "setTxtProgressBar", "txtProgressBar")
 
 # TODO: make these more specific
 import(aqp)
@@ -34,10 +34,11 @@ importFrom(igraph,
   degree,
   minimum.spanning.tree,
   delete.edges,
-  fastgreedy.community,
+  cluster_walktrap,
+  cluster_fast_greedy,
   membership,
-  layout.fruchterman.reingold,
-  dendPlot,
+  layout_with_fr,
+  plot_dendrogram,
   plot.igraph
 )
 
@@ -45,6 +46,7 @@ importFrom(cluster,
   daisy,
   diana
 )
+
 
 importFrom(lattice,
   levelplot,
@@ -73,9 +75,11 @@ importFrom(soilDB,
 importFrom(sp,
   spsample,
   coordinates,
-  spTransform,
   over,
-  SpatialPointsDataFrame
+  SpatialPointsDataFrame,
+  is.projected,
+  CRS,
+  spTransform
 )
 
 importFrom(reshape2,
@@ -114,8 +118,10 @@ importFrom(RColorBrewer,
 
 importFrom(plyr, 
   dlply,
+  ldply,
   ddply,
   summarise
 )
+
 
 exportPattern("^[^\\.]")

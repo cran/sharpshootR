@@ -7,6 +7,10 @@
 
 ## NOTE: dendrogram representation of community structure is only possible with some community detection algorithms
 
+## TODO: investigate some heuristics for layout algorithm selection:
+### layout_with_fr works most of the time
+### layout_with_lgl works for most large graphs, but not when there are many disconnected sub-graphs
+
 .maximum.spanning.tree <- function(x){
   # convert cost representation of weights to "strength"
   E(x)$weight <- -1 * E(x)$weight
@@ -19,14 +23,40 @@
 
 # dendrogram representation relies on ape plotting functions
 # ... are passed onto plot.igraph or plot.phylo
-plotSoilRelationGraph <- function(m, s='', plot.style='network', spanning.tree=NULL, del.edges=NULL, vertex.scaling.factor=2, edge.scaling.factor=1, edge.transparency=1, edge.col=grey(0.5), edge.highlight.col='royalblue', g.layout=layout.fruchterman.reingold, ...) {
+# 2015-12-22: swap layout algorithms when > 20 individuals
+plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upper', spanning.tree=NULL, del.edges=NULL, vertex.scaling.factor=2, edge.scaling.factor=1, edge.transparency=1, edge.col=grey(0.5), edge.highlight.col='royalblue', g.layout=layout_with_fr, ...) {
 	
   # dumb hack to make R CMD check happy
   weight <- NULL
   
 	# generate graph
-	g <- graph.adjacency(m, mode='upper', weighted=TRUE)
+	g <- graph.adjacency(m, mode=graph.mode, weighted=TRUE)
   
+	### TODO ###
+	## figure out some hueristics for selecting a method: layout_with_fr is almost always the best one
+	
+	# when there are many clusters, layout_with_lgl doesn't work properly
+	# switch back to layout_with_fr when > 5
+	# g.n.clusters <-  clusters(g)$no
+	
+	# maybe this can be used as a hueristic as well:
+	# betweenness(g)
+	
+# 	# select layout if not provided
+# 	if(missing(g.layout)) {
+# 	  if(dim(m)[1] > 20 & g.n.clusters < 5) {
+# 	    g.layout <- layout_with_lgl
+# 	    message('layout: Large Graph Layout algorithm')
+# 	  }
+# 	  
+# 	  else {
+# 	    g.layout <- layout_with_fr
+# 	    message('layout: Fruchterman-Reingold algorithm')
+# 	  }
+# 	  
+# 	}
+	### TODO ###
+	
   # optionally prune weak edges less than threshold quantile
   if(!is.null(del.edges))
 	  g <- delete.edges(g, E(g) [ weight < quantile(weight, del.edges) ])
@@ -73,14 +103,20 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', spanning.tree=N
 
 	# adjust size of vertex based on sqrt(degree / max(degree))
   g.degree <- degree(g)
-	v.size <- sqrt(g.degree/max(g.degree)) * 10 * vertex.scaling.factor
+	V(g)$size <- sqrt(g.degree/max(g.degree)) * 10 * vertex.scaling.factor
   
   # optionally adjust edge width based on weight
   if(!missing(edge.scaling.factor))
     E(g)$width <- sqrt(E(g)$weight) * edge.scaling.factor
   
+	## extract communities
+	# the fast-greedy algorithm is fast, but dosn't work with directed graphs
+	if(graph.mode == 'directed')
+	  g.com <- cluster_walktrap(g) ## this works OK with directed graphs
+	else
+	  g.com <- cluster_fast_greedy(g) ## this can crash with some networks
+	
 	# community metrics
-	g.com <- fastgreedy.community(g) ## this can crash with some networks
 	g.com.length <- length(g.com)
 	g.com.membership <- membership(g.com)
 
@@ -114,10 +150,10 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', spanning.tree=N
 	
 	if(plot.style == 'network') {
 		set.seed(1010101) # consistant output
-		plot(g, layout=g.layout, vertex.size=v.size, vertex.label.color='black', vertex.label.font=font.vect, ...)
+		plot(g, layout=g.layout, vertex.label.color='black', vertex.label.font=font.vect, ...)
 		}
 	if(plot.style == 'dendrogram') {
-		dendPlot(g.com, label.offset=0.1, font=font.vect, col='black', colbar=cols, ...)
+	  plot_dendrogram(g.com, mode='phylo', label.offset=0.1, font=font.vect, palette=cols, ...)
 		}
   
   # invisibly return the graph
