@@ -4,19 +4,28 @@ importFrom("grDevices", "colorRampPalette", "grey")
 
 importFrom("graphics", "abline", "arrows", "axis", "image", "layout",
              "legend", "lines", "mtext", "par", "points", "rect",
-             "segments", "strheight", "text", "grid")
+             "segments", "strheight", "text", "grid", "hist", "box", "boxplot", "title",
+           "barplot", "bxp")
 
 importFrom("methods", "as", "slot")
 
 importFrom("stats", "as.dendrogram", "as.formula", "as.hclust",
              "complete.cases", "cutree", "density", "lm", "median",
-             "na.omit", "predict", "quantile")
+             "na.omit", "predict", "quantile", "dnorm", "sd", "update")
 
 importFrom("utils", "URLencode", "download.file", "read.csv", "setTxtProgressBar", "txtProgressBar")
 
 # TODO: make these more specific
 import(aqp)
 import(ape)
+
+importFrom(stringi,
+  stri_match_first_regex,
+  stri_pad,
+  stri_replace_all_fixed,
+  stri_sub,
+  stri_length
+)
 
 importFrom(igraph,
   graph.edgelist,
@@ -51,15 +60,31 @@ importFrom(cluster,
 importFrom(lattice,
   levelplot,
   panel.levelplot,
-  panel.segments
+  panel.segments,
+  panel.rect,
+  panel.arrows,
+  panel.grid,
+  strip.custom,
+  panel.abline,
+  trellis.par.set,
+  trellis.par.get,
+  barchart,
+  simpleKey,
+  yscale.components.default
 )
 
 importFrom(digest,
   digest
 )
 
+importFrom(e1071,
+  skewness
+)
+
 importFrom(latticeExtra,
-  dendrogramGrob
+  dendrogramGrob,
+  segplot,
+  panel.segplot
 )
 
 importFrom(vegan,
@@ -69,7 +94,8 @@ importFrom(vegan,
 
 importFrom(soilDB,
   format_SQL_in_statement,
-  SDA_query
+  SDA_query,
+  waterDayYear
 )
 
 importFrom(sp,
@@ -79,7 +105,11 @@ importFrom(sp,
   SpatialPointsDataFrame,
   is.projected,
   CRS,
-  spTransform
+  spTransform,
+  SpatialPolygons,
+  proj4string,
+  Polygons,
+  Polygon
 )
 
 importFrom(reshape2,
@@ -117,6 +147,7 @@ importFrom(RColorBrewer,
 )
 
 importFrom(plyr, 
+  join,
   dlply,
   ldply,
   ddply,

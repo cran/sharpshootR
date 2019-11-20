@@ -1,15 +1,13 @@
-## Ideas:
-# http://bommaritollc.com/2012/06/17/summary-community-detection-algorithms-igraph-0-6/?utm_source=rss&utm_medium=rss&utm_campaign=summary-community-detection-algorithms-igraph-0-6
-# http://stackoverflow.com/questions/9471906/what-are-the-differences-between-community-detection-algorithms-in-igraph
-
-## TODO: community evaluation will crash with most community detection algorithms:
-#     examples: plano, miami
+# https://github.com/ncss-tech/sharpshootR/issues/7
 
 ## NOTE: dendrogram representation of community structure is only possible with some community detection algorithms
 
 ## TODO: investigate some heuristics for layout algorithm selection:
-### layout_with_fr works most of the time
-### layout_with_lgl works for most large graphs, but not when there are many disconnected sub-graphs
+# layout_with_fr works most of the time
+# layout_with_lgl works for most large graphs, but not when there are many disconnected sub-graphs
+# layout_with_graphopt works but requires tinkering with parameters
+
+# normalize transparency logic and argument names: should all be "alpha"
 
 .maximum.spanning.tree <- function(x){
   # convert cost representation of weights to "strength"
@@ -23,11 +21,11 @@
 
 # dendrogram representation relies on ape plotting functions
 # ... are passed onto plot.igraph or plot.phylo
-# 2015-12-22: swap layout algorithms when > 20 individuals
-plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upper', spanning.tree=NULL, del.edges=NULL, vertex.scaling.factor=2, edge.scaling.factor=1, edge.transparency=1, edge.col=grey(0.5), edge.highlight.col='royalblue', g.layout=layout_with_fr, ...) {
+plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upper', spanning.tree=NULL, del.edges=NULL, vertex.scaling.method='degree', vertex.scaling.factor=2, edge.scaling.factor=1, vertex.alpha=0.65, edge.transparency=1, edge.col=grey(0.5), edge.highlight.col='royalblue', g.layout=layout_with_fr, vertex.label.color='black', ...) {
 	
   # dumb hack to make R CMD check happy
   weight <- NULL
+  name <- NULL
   
 	# generate graph
 	g <- graph.adjacency(m, mode=graph.mode, weighted=TRUE)
@@ -57,10 +55,12 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upp
 # 	}
 	### TODO ###
 	
+	weight <- E(g)$weight
+	
   # optionally prune weak edges less than threshold quantile
   if(!is.null(del.edges))
-	  g <- delete.edges(g, E(g) [ weight < quantile(weight, del.edges) ])
-  
+	  g <- delete.edges(g, E(g) [ which(weight < quantile(weight, del.edges, na.rm = TRUE)) ])
+	
 	# optionally compute min/max spanning tree
   if(! is.null(spanning.tree)) {
     # min spanning tree: not clear how this is useful
@@ -77,7 +77,7 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upp
     # max spanning tree + edges with weights > n-tile added back
     if(is.numeric(spanning.tree)){
       # select edges and store weights
-      es <- E(g) [ weight > quantile(weight, spanning.tree) ]
+      es <- E(g) [ which(weight > quantile(weight, spanning.tree, na.rm = TRUE)) ]
       es.w <- es$weight
       # trap ovious errors
       if(length(es.w) < 1)
@@ -100,10 +100,27 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upp
   
 	# transfer names
 	V(g)$label <- V(g)$name 
-
-	# adjust size of vertex based on sqrt(degree / max(degree))
-  g.degree <- degree(g)
-	V(g)$size <- sqrt(g.degree/max(g.degree)) * 10 * vertex.scaling.factor
+  
+	## adjust size of vertex based on some measure of connectivity
+	
+	# use vertex distance
+	# interpretation is intuitive, but will only work when:
+	# 's' is a valid series name in 'm'
+	# there is no possibility of disconnected vertices (e.g deletion of edges)
+  if(vertex.scaling.method == 'distance' & s != '' & is.null(del.edges)) {
+    # use the distance from named series
+    vertexSize <- igraph::distances(g, v=V(g)[name==s], to=V(g))
+    # note that the distance from 's' -> 's' is 0, so we replace with 1
+    vertexSize <- c(1.5 * max(vertexSize, na.rm=TRUE), vertexSize[-1])
+    V(g)$size <- sqrt(vertexSize/max(vertexSize)) * 10 * vertex.scaling.factor
+  } else {
+    # scale vertex by degree (number of connections)
+    vertexSize <- degree(g)
+    V(g)$size <- sqrt(vertexSize/max(vertexSize)) * 10 * vertex.scaling.factor
+    
+  }
+	
+	
   
   # optionally adjust edge width based on weight
   if(!missing(edge.scaling.factor))
@@ -119,7 +136,11 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upp
 	# community metrics
 	g.com.length <- length(g.com)
 	g.com.membership <- membership(g.com)
-
+  
+	# save membership to original graph
+	# this is based on vertex order
+	V(g)$cluster <- g.com.membership
+	
 	# colors for communities: choose color palette based on number of communities
 	if(g.com.length <= 9 & g.com.length > 2) 
 		cols <- brewer.pal(n=g.com.length, name='Set1') 
@@ -129,15 +150,15 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upp
 		cols <- colorRampPalette(brewer.pal(n=9, name='Set1'))(g.com.length)
 	
 	# set colors based on community membership
-	cols.alpha <- alpha(cols, 0.65)
-	V(g)$color <- cols.alpha[membership(g.com)]
+	cols.alpha <- alpha(cols, vertex.alpha)
+	V(g)$color <- cols.alpha[g.com.membership]
   
   # get an index to edges associated with series specified in 's'
   el <- get.edgelist(g)
 	idx <- unique(c(which(el[, 1] == s), which(el[, 2] == s)))
 	
 	# set default edge color
-  E(g)$color <- edge.col
+  E(g)$color <- alpha(edge.col, edge.transparency)
 	# set edge colors based on optional series name to highlight
   E(g)$color[idx] <- alpha(edge.highlight.col, edge.transparency)
   
@@ -150,7 +171,7 @@ plotSoilRelationGraph <- function(m, s='', plot.style='network', graph.mode='upp
 	
 	if(plot.style == 'network') {
 		set.seed(1010101) # consistant output
-		plot(g, layout=g.layout, vertex.label.color='black', vertex.label.font=font.vect, ...)
+		plot(g, layout=g.layout, vertex.label.color=vertex.label.color, vertex.label.font=font.vect, ...)
 		}
 	if(plot.style == 'dendrogram') {
 	  plot_dendrogram(g.com, mode='phylo', label.offset=0.1, font=font.vect, palette=cols, ...)

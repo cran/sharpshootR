@@ -7,7 +7,8 @@
 SoilTaxonomyDendrogram(spc, name = "hzname", max.depth = 150, 
 n.depth.ticks = 6, scaling.factor = 0.015, cex.names = 0.75, 
 cex.id = 0.75, axis.line.offset = -4, width = 0.1, y.offset = 0.5, 
-cex.taxon.labels = 0.66)
+shrink=FALSE, font.id=2,
+cex.taxon.labels = 0.66, dend.color = par("fg"), dend.width = 1)
 }
 
 \arguments{
@@ -21,7 +22,11 @@ cex.taxon.labels = 0.66)
   \item{axis.line.offset}{horizontal offset for depth axis}
   \item{width}{width of profiles}
   \item{y.offset}{vertical offset between dendrogram and profiles}
+  \item{shrink}{should long horizon names be shrunk by 80\% ?}
+  \item{font.id}{font style applied to profile id, default is 2 (bold)}
   \item{cex.taxon.labels}{character scaling for taxonomic information}
+  \item{dend.color}{dendrogram line color}
+  \item{dend.width}{dendrogram line width}
 }
 
 \details{This function looks for specific site-level attributes named: \code{soilorder}, \code{suborder}, \code{greatgroup}, and \code{subgroup}.
@@ -37,9 +42,8 @@ cex.taxon.labels = 0.66)
 \references{
 D.E. Beaudette, P. Roudier and A.T. O'Geen. 2012. Algorithms for Quantitative Pedology, a Toolkit
 for Soil Scientists. Computers & Geosciences: 52: 258--268. (doi: 10.1016/j.cageo.2012.10.020)
-
-\url{http://aqp.r-forge.r-project.org/}
 }
+
 \author{D.E. Beaudette}
 
 \examples{
