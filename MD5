@@ -1,12 +1,12 @@
-4d98ae4b5981cc08a3e97562b8f712c7 *DESCRIPTION
+175477f443f44d3e666867eaa782cd8f *DESCRIPTION
 aa8f500ea0e9afcb7da00a2593af9f53 *NAMESPACE
 35194b5efd745c860a755082acbfbf7c *R/CDEC_StationInfo.R
 a02091220ac0bdab96bbc8bf49d0daa3 *R/CDECquery.R
 c2cc382ee25ad0483d0c14316cd04bce *R/CDECsnowQuery.R
 6d419dc81f151232e189f67bac1b70f4 *R/FFD.R
 2dd2070bb5605b08accdf9063e56883a *R/Moran_I_ByRaster.R
-ae320f77d257b6eb4f0708826459b027 *R/PCP_plot.R
-6c45c30d17ef7ecf0d1266f0838e5170 *R/PLSS2LL.R
+e76eae29f1e4cdf8ab677521e7eaa2d2 *R/PCP_plot.R
+ef3e52c1f4001c8c3e215eee20a90861 *R/PLSS2LL.R
 060b5f0af92a28f0d24929688cf16cac *R/SoilTaxonomyDendrogram.R
 72e49749f290f3a1b6e6db0ac11906b0 *R/aggregateColorPlot.R
 58a3ecf5eea3c361df303671b01dc157 *R/aspect.plot.R
@@ -16,7 +16,7 @@ ae320f77d257b6eb4f0708826459b027 *R/PCP_plot.R
 cccf7aa3cf57cde620af3d7018e8e209 *R/generateLineHash.R
 ace55f3abb19fd327b4fe5bbc72f043a *R/geomorphBySoilSeries-SSURGO.R
 80d12eab4164b1113f2c3e308b917fda *R/joinAdjacency.R
-557b432c6969d13d3a4bb3f28dc96cbe *R/multinominal2logical.R
+e91ea47a070d94cf1851e8e0991201bb *R/multinominal2logical.R
 e4012f43eb09f8437310e3d7f4d59d40 *R/percentileDemo.R
 68acd79fd071dc55a064669c4c0730cf *R/plotAvailWater.R
 ee0ee0666e1bfeea32d8b779e36d21fc *R/plotProfileDendrogram.R
@@ -76,5 +76,5 @@ a929200118b38d7d07d7dc2d5970684f *man/site_photos_kml.Rd
 8462c2d363d062c3798c3a3480e580cb *man/vizAnnualClimate.Rd
 28520436fca70ad26e249944fac78d3a *man/vizHillslopePosition.Rd
 7997d628bff24ed1e5d3829868fc890b *tests/testthat.R
-5c1431621581e1615ac4fc1b89d16263 *tests/testthat/test-FFD.R
-e1f04fdda58d66907cea38410c9e5b77 *tests/testthat/test-multinominal2logical.R
+53094cbecb99b8b7f902ba8659737e9f *tests/testthat/test-FFD.R
+10fb98ba6b413f4436f33405c598f284 *tests/testthat/test-multinominal2logical.R
