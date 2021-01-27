@@ -2,8 +2,8 @@ Package: sharpshootR
 Type: Package
 Title: A Soil Survey Toolkit
 Description: Miscellaneous soil data management, summary, visualization, and conversion utilities to support soil survey.
-Version: 1.6.5
-Date: 2020-10-16
+Version: 1.7
+Date: 2021-01-26
 Authors@R: c(
   person(given="Dylan", family="Beaudette", role = c("cre"), email = "dylan.beaudette@usda.gov"), 
   person(given="Jay", family="Skovlin", role = c("aut")), 
@@ -22,7 +22,8 @@ Repository: CRAN
 URL: https://github.com/ncss-tech/aqp
 BugReports: https://github.com/ncss-tech/aqp/issues
 Suggests: MASS, rgdal, spdep, circlize, rvest, xml2, rgeos, raster,
-        httr, jsonlite, dendextend, testthat, hydromad, latticeExtra
+        httr, jsonlite, dendextend, testthat, hydromad, latticeExtra,
+        farver
 Depends: R (>= 3.5.0)
 Imports: grDevices, graphics, methods, stats, utils, aqp, ape, soilDB,
         igraph, cluster, lattice, vegan, sp, reshape2, Hmisc, scales,
@@ -31,5 +32,5 @@ Imports: grDevices, graphics, methods, stats, utils, aqp, ape, soilDB,
 Additional_repositories: http://hydromad.catchment.org
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-10-20 16:11:12 UTC; Dylan.Beaudette
-Date/Publication: 2020-10-20 20:00:02 UTC
+Packaged: 2021-01-27 17:54:51 UTC; Dylan.Beaudette
+Date/Publication: 2021-01-27 22:10:02 UTC
