@@ -43,10 +43,11 @@ d <- data.frame(
 names(d) <- c('id', 'qq', 'q', 's', 't', 'r', 'type', 'm')
 # generate formatted PLSS codes
 formatPLSS(d, type='SN')
+
 }
 \seealso{
 \code{\link{PLSS2LL}}
 }
 \author{
-D.E. Beaudette, Jay Skovlin
+D.E. Beaudette, Jay Skovlin, A.G. Brown
 }

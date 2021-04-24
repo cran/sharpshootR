@@ -30,7 +30,7 @@
 #' names(d) <- c('id', 'qq', 'q', 's', 't', 'r', 'type', 'm')
 #' # generate formatted PLSS codes
 #' formatPLSS(d, type='SN')
-# p: data.frame with chunks of PLSS coordinates
+#' 
 formatPLSS <- function(p, type = 'SN') {
   # check for required packages
   if(!requireNamespace('stringi', quietly = TRUE))
@@ -186,23 +186,7 @@ formatPLSS <- function(p, type = 'SN') {
 #' @note This function requires the following packages: \code{httr}, \code{jsonlite}, and \code{sp}.
 #' @export
 #'
-#' @examples
-#'
-#' if(requireNamespace("curl") &
-#'
-#'    curl::has_internet() &
-#'     require(sp)) {
-#'
-#'     # create coordinates
-#'     x <- -115.3823
-#'     y <- 48.88228
-#'
-#'     # fetch PLSS geometry for these coordinates
-#'     p.plss <- LL2PLSS(x, y)
-#'
-#'     # plot geometry
-#'     plot(p.plss$geom)
-#' }
+#' 
 LL2PLSS <- function(x, y, returnlevel= 'I') {
 
   if (length(x) > 1 && length(y) > 1 && length(x) == length(y)) {
@@ -255,12 +239,19 @@ LL2PLSS <- function(x, y, returnlevel= 'I') {
 
     # convert JSON -> list
     res <- jsonlite::fromJSON(httr::content(res, as = 'text'), flatten = TRUE)
-
-    # check for invalid result (e.g. reversed coordinates)
-    if(is.null(res$features$geometry.rings))
-      stop("invalid geometry specification, check coordinate XY order (longitude: X, latitude: Y)")
-
-    # attempt to extract PLSS geometry
+    
+    ## TODO: check for a valid result from API
+    
+    # check for invalid result:
+    # * reversed coordinates in x,y
+    # * nothing returned by the API
+    if(is.null(res$features$geometry.rings)) {
+      message("invalid geometry specification, check coordinate XY order (longitude: X, latitude: Y)")
+      # return "NULL" result
+      return(list(geom=SpatialPolygons(list()), plss=NULL))
+    }
+    
+  # attempt to extract PLSS geometry
     geom <- SpatialPolygons(list(Polygons(list(Polygon(res$features$geometry.rings[[1]][1,, ])), ID = .polyID)))
     srid <- res$features$geometry.spatialReference.wkid
     proj4string(geom) <- paste0('+init=epsg:', srid)
@@ -288,14 +279,16 @@ LL2PLSS <- function(x, y, returnlevel= 'I') {
 # http://nationalcad.org/download/PublicationHandbookOct2016.pdf
 # http://nationalcad.blogspot.com/2015/03/plss-cadnsdi-plss-first-division.html
 
-# This function retrieves one coordinate. To be used by LSS2LL wrapper function.
+# This function retrieves one coordinate. To be used by PLSS2LL wrapper function.
 # consider not exporting
 
 .PLSS2LL <- function(p) {
+  
   # p in a vectorized function is passed as named vector
   if (is.na(p['plssid'])) {
     return(NA)
   }
+  
   formatted.plss <- p['plssid']
 
 
@@ -325,16 +318,22 @@ LL2PLSS <- function(x, y, returnlevel= 'I') {
     # keep only coordinates
     r <- r$coordinates
 
+    if (is.null(r))
+      return(NULL)
+    
     # request that are less than QQ precision will return multiple QQ centers
     # keep the mean coordinates - get to one set of lat/lon coords
     if (nrow(r) >= 0) {
-      r <-
-        data.frame(id = p['id'], plssid = formatted.plss, t(colMeans(r[, 2:3], na.rm = TRUE)))
+      r <- data.frame(
+        id = p['id'], 
+        plssid = formatted.plss, 
+        t(colMeans(r[, 2:3], na.rm = TRUE))
+      )
     }
     res <- r
   }
+  # reset rownames
   row.names(res) <- NULL
-  #return(as.vector(res))
   return(res)
 }
 
@@ -350,29 +349,7 @@ LL2PLSS <- function(x, y, returnlevel= 'I') {
 #' @seealso \code{\link{LL2PLSS}}, \code{\link{formatPLSS}}
 #' @export
 #'
-#' @examples
-#' if(requireNamespace("curl") &
-#'    curl::has_internet()) {
-#'
-#'   # create some data
-#'   d <- data.frame(
-#'     id = 1:3,
-#'     qq = c('SW', 'SW', 'SE'),
-#'     q = c('NE', 'NW', 'SE'),
-#'     s = c(17, 32, 30),
-#'     t = c('T36N', 'T35N', 'T35N'),
-#'     r = c('R29W', 'R28W', 'R28W'),
-#'     type = 'SN',
-#'     m = 'MT20',
-#'     stringsAsFactors = FALSE
-#'   )
-#'
-#'   # generate formatted PLSS codes
-#'   d$plssid <- formatPLSS(d)
-#'
-#'   # fetch lat/long coordinates
-#'   PLSS2LL(d)
-#' }
+#' 
 PLSS2LL <- function(p, plssid = "plssid") {
   # check for required packages
   if(!requireNamespace('httr', quietly = TRUE) | !requireNamespace('jsonlite', quietly = TRUE))
@@ -386,7 +363,7 @@ PLSS2LL <- function(p, plssid = "plssid") {
     p <- as.data.frame(p)
   }
 
-  if(!nrow(p) > 0) {
+  if (nrow(p) == 0) {
     stop('p must have more than 0 rows')
   }
 
@@ -396,49 +373,12 @@ PLSS2LL <- function(p, plssid = "plssid") {
   }
 
   # apply over data frame
-  res <-  do.call("rbind", apply(p, 1, .PLSS2LL))
+  pres <- apply(p, 1, .PLSS2LL)
+  
+  if (length(pres) == 0)
+    return(NULL)
+  
+  res <-  do.call("rbind", pres)
   return(res)
 }
 
-
-
-## TODO: remove this after verifying intent
-
-# .PLSS2LL_1 <- function(formatted.plss) {
-# 
-#   # check for required packages
-#   if(!requireNamespace('httr', quietly = TRUE) | !requireNamespace('jsonlite', quietly = TRUE))
-#     stop('please install the `httr` and `jsonlite` packages', call.=FALSE)
-# 
-#   # pre-allocate char vector for results
-#   res <- list()
-# 
-#   for(i in 1:length(formatted.plss)) {
-#     # composite URL for GET request, result is JSON
-#     u <- paste0("https://gis.blm.gov/arcgis/rest/services/Cadastral/BLM_Natl_PLSS_CadNSDI/MapServer/exts/CadastralSpecialServices/GetLatLon?trs=", formatted.plss[i], "&f=pjson")
-# 
-#     # process GET request
-#     r <- httr::GET(u)
-#     httr::stop_for_status(r)
-# 
-#     # convert JSON -> list
-#     r <- jsonlite::fromJSON(httr::content(r, as = 'text'), flatten = TRUE)
-# 
-#     # keep only coordinates
-#     # r <- r$coordinates[, c('lon', 'lat')]
-#     r <- r$coordinates
-# 
-#     # request that are less than QQ precision will return multiple QQ centers
-#     # keep the mean coordinates
-#     if(nrow(r) >= 1) {
-#       r <- data.frame(t(colMeans(r[ ,2:3], na.rm = TRUE)))
-#     }
-#     #if(nrow(r) == 0) {
-#     #    r <- data.frame(plssid=r$plssid[1], lat='NA', lon='NA')
-#     #}
-#     res[[i]] <- r
-#   }
-# 
-#   res <- plyr::ldply(res)
-#   return(res)
-# }

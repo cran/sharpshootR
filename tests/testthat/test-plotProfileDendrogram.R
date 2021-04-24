@@ -2,12 +2,12 @@ context("plotProfileDendrogram")
 
 ## sample data
 
-library(aqp)
-library(cluster)
+library(aqp, quietly = TRUE)
+suppressWarnings(library(cluster, quietly = TRUE))
 
 # example data that will have IDs re-shuffled by profile_compare (https://github.com/ncss-tech/aqp/issues/7)
 set.seed(10101)
-s <<- combine(lapply(c('Z', LETTERS[1:5]), random_profile, SPC=TRUE))
+s <<- aqp::combine(lapply(c('Z', LETTERS[1:5]), random_profile, SPC=TRUE))
 
 ## tests
 
