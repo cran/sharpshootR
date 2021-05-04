@@ -8,7 +8,7 @@
 # dt: anything that can be coerced to a Date class object
 # value: vector of values associated with a single year
 # fill: attempt to estimate NA (not implemented)
-alignDOY <- function(dt, value, fill=FALSE) {
+.alignDOY <- function(dt, value, fill=FALSE) {
   
   # 366 used to account for leap-years
   if(length(value) > 366)
@@ -36,7 +36,7 @@ alignDOY <- function(dt, value, fill=FALSE) {
 # frostTemp: critical temperature that defines "frost"
 # endSpringDOY: day that marks end of "spring" (typically Jan 1 -- June 30)
 # startFallDOY: day that marks start of "fall" (typically Aug 1 -- Dec 31)
-findFirstLastFrostDOY <- function(v, frostTemp=32, endSpringDOY=182, startFallDOY=213) {
+.findFirstLastFrostDOY <- function(v, frostTemp=32, endSpringDOY=182, startFallDOY=213) {
   
   # 366 used to account for leap-years
   if(length(v) > 366)
@@ -63,13 +63,18 @@ findFirstLastFrostDOY <- function(v, frostTemp=32, endSpringDOY=182, startFallDO
   # if there are no days below critical temperature, then use last day of the year (366)
   first.fall.frost <- ifelse(length(fall.idx) < 1, 366, min(doy.fall[fall.idx], na.rm=TRUE))
   
-  return(data.frame(lastSpring=last.spring.frost, firstFall=first.fall.frost))
+  res <- data.frame(
+    lastSpring = last.spring.frost, 
+    firstFall = first.fall.frost
+  )
+  
+  return(res)
 }
 
 
 # generate a frost / not frost matrix for each year (row) in 'fl'
 # fl: data.frame with last spring / first fall DOY
-makeFrostMatrix <- function(fl) {
+.makeFrostMatrix <- function(fl) {
   
   # number of years
   n <- nrow(fl)
@@ -95,11 +100,11 @@ makeFrostMatrix <- function(fl) {
 # identify the frost-free period for a single year
 # d: data.frame with 'datetime' and 'value' columns
 # minDays: rule for min number of days required (ea. spring|fall) for estimation
-# \dots: further arguments passed to findFirstLastFrostDOY()
+# \dots: further arguments passed to .findFirstLastFrostDOY()
 # result is a data.frame with first/last frost DOY
-frostFreePeriod <- function(d, minDays=165, ...) {
+.frostFreePeriod <- function(d, minDays, frostTemp, endSpringDOY, startFallDOY) {
   # align values with DOY in the presence of missing data
-  v <- alignDOY(d$datetime, d$value)
+  v <- .alignDOY(d$datetime, d$value)
   
   # sanity check: need at least 164 days of data / semi-annual period
   n.spring <- length(which(!is.na(v[1:182])))
@@ -109,7 +114,7 @@ frostFreePeriod <- function(d, minDays=165, ...) {
     return(NULL)
   
   # get the last spring and first fall frost DOY
-  fl <- findFirstLastFrostDOY(v, ...)
+  fl <- .findFirstLastFrostDOY(v, frostTemp = frostTemp, endSpringDOY = endSpringDOY, startFallDOY = startFallDOY)
   
   return(fl) 
 }
@@ -119,10 +124,46 @@ frostFreePeriod <- function(d, minDays=165, ...) {
 # d: data.frame with columns 'datetime' 'year', and 'value'
 # returnDailyPr: optionally return list with daily summaries
 # minDays: min number of days / spring|fall required for estimates
-FFD <- function(d, returnDailyPr=TRUE, minDays=165, ...) {
+
+
+#' @title Frost-Free Day Evaluation
+#' 
+#' @description Evaluation frost-free days and related metrics from daily climate records.
+#'
+#' @param d `data.frame` with columns 'datetime' 'year', and 'value'; 'value' being daily minimum temperature, see details
+#' @param returnDailyPr optionally return `list` with daily summaries
+#' @param minDays min number of days of non-NA data in spring | fall, required for a reasonable estimate of FFD
+#' @param frostTemp critical temperature that defines "frost" (same units as `d$value`)
+#' @param endSpringDOY day of year that marks end of "spring" (typically Jan 1 -- June 30)
+#' @param startFallDOY day of year that marks start of "fall" (typically Aug 1 -- Dec 31)
+#' 
+#' @details The default `frostTemp=32` is suitable for use with minimum daily temperatures in degrees Fahrenheit. Use `frostTemp=0` for temperatures in degrees Celsius.
+#' 
+#' [FFD tutorial](http://ncss-tech.github.io/AQP/sharpshootR/FFD-estimates.html)
+#' 
+#' @return a `data.frame` when a `returnDailyPr=FALSE`, otherwise a `list` with the following elements:
+#'   * summary: FFD summary statistics as a `data.frame`
+#'   * fm: frost matrix
+#'   * Pr.frost: Pr(frost|day): daily probability of frost
+#' 
+#' @author D.E. Beaudette
+#' 
+#' @export
+#'
+#' @examples
+#' 
+#' # 11 years of data from highland meadows
+#' data('HHM', package = 'sharpshootR')
+#' x.ffd <- FFD(HHM, returnDailyPr = FALSE, frostTemp=32)
+#' 
+#' str(x.ffd)
+#' 
+FFD <- function(d, returnDailyPr = TRUE, minDays = 165, frostTemp = 32, endSpringDOY = 182, startFallDOY = 213) {
+  
+  ## TODO: replace ddply with split/lapply
   
   # get frost-free period for over all years
-  ffp <- ddply(d, 'year', frostFreePeriod, minDays=minDays, ...)
+  ffp <- ddply(d, 'year', .frostFreePeriod, minDays = minDays, frostTemp = frostTemp, endSpringDOY = endSpringDOY, startFallDOY = startFallDOY)
   
   # years of data
   n.yrs <- nrow(ffp)
@@ -141,7 +182,7 @@ FFD <- function(d, returnDailyPr=TRUE, minDays=165, ...) {
   # days where Pr(no frost) = 50%, 80%, 90%
   q.fall <- quantile(ffp$firstFall, probs=c(0.5, 0.2, 0.1))
   
-  # compute probabalistic estimates of FFD
+  # compute probabilistic estimates of FFD
   ffd.q <- q.fall - q.spring
   
   # combine FFD, last spring / first fall DOY, number of years data
@@ -161,7 +202,7 @@ FFD <- function(d, returnDailyPr=TRUE, minDays=165, ...) {
     
     # TODO: copy year to matrix row names
     # create frost matrix
-    fm <- makeFrostMatrix(ffp)
+    fm <- .makeFrostMatrix(ffp)
     
     # estimate Pr(frost|day) over all years of data
     Pr.frost <- colSums(fm) / nrow(fm)
@@ -185,6 +226,22 @@ FFD <- function(d, returnDailyPr=TRUE, minDays=165, ...) {
 
 
 
+#' @title Plot output from FFD()
+#'
+#' @param s output from [`FFD`], with `returnDailyPr = TRUE`
+#' @param sub.title figure subtitle
+#'
+#' @return nothing, function is called to generate graphical output
+#' @export
+#'
+#' @examples
+#' 
+#' # 11 years of data from highland meadows
+#' data('HHM', package = 'sharpshootR')
+#' x.ffd <- FFD(HHM, returnDailyPr = TRUE, frostTemp=32)
+#' 
+#' FFDplot(x.ffd)
+#' 
 FFDplot <- function(s, sub.title=NULL) {
   
   n.yrs <- nrow(s$fm)
@@ -193,6 +250,10 @@ FFDplot <- function(s, sub.title=NULL) {
   q.fall <- unlist(s$summary[, c('fall.50', 'fall.80', 'fall.90')])
   prob.seq <- seq(0, 1, by=0.1)
   date.seq <- seq.Date(from=as.Date('2011-01-15'), to=as.Date('2011-12-31'), by='1 month')
+  
+  # device options are modified locally, reset when done
+  op <- par(no.readonly = TRUE)
+  on.exit(par(op))
   
   par(mfcol=c(1,2))
   

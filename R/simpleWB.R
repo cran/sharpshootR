@@ -1,4 +1,21 @@
 
+## TODO: using local copy of leaky bucket model until resolved:
+
+## bug? in hydromad::bucket.sim()
+# ET[t] should not be greater than PPT[t] or S[t] when S_prev = 0
+# 
+# https://github.com/josephguillaume/hydromad/blob/master/R/bucket.R
+
+## sharpshootR-specific
+# https://github.com/ncss-tech/sharpshootR/issues/40
+
+## opened issue
+# https://github.com/josephguillaume/hydromad/issues/188
+
+
+
+
+
 #' @title Simple interface to the hydromad "leaky bucket" soil moisture model
 #' 
 #' @description Simple interface to the hydromad "leaky bucket" soil moisture model.
@@ -12,6 +29,9 @@
 #' 
 #' @param S_0 initial soil moisture as a fraction of total water storage (mm)
 #' @param a.ss recession coefficients for subsurface flow from saturated zone, should be > 0
+#' 
+#' @param M fraction of area covered by deep-rooted vegetation
+#' @param etmult multiplier for PET
 #'
 #' @details Adjustments for coarse fragments should be made by reducing `thickness`.
 #' 
@@ -30,7 +50,7 @@
 # https://github.com/josephguillaume/hydromad/blob/master/R/bucket.R
 # https://github.com/josephguillaume/hydromad/blob/master/src/bucket.c
 
-simpleWB <- function(PPT, PET, D, thickness, sat, fc, S_0 = 0.5, a.ss = 0.05) {
+simpleWB <- function(PPT, PET, D, thickness, sat, fc, S_0 = 0.5, a.ss = 0.05, M = 0, etmult = 1) {
   
   # sanity check: package requirements
   if(!requireNamespace('hydromad'))
@@ -49,22 +69,29 @@ simpleWB <- function(PPT, PET, D, thickness, sat, fc, S_0 = 0.5, a.ss = 0.05) {
   # prep input / output data for model
   z <- data.frame(P = PPT, E = PET)
   
-  # init model: leaky-bucket SMA, no routing component
-  m <- hydromad::hydromad(z, sma = "bucket", routing = NULL)
-  # add soil hydraulic parameters
-  m <- update(
-    m, 
-    Sb = Sb, 
-    fc = Sb.fc, 
-    S_0 = S_0,
-    a.ss = a.ss,
-    M = 0, 
-    etmult = 1, 
-    a.ei = 0
-  )
+  # # init model: leaky-bucket SMA, no routing component
+  # m <- hydromad::hydromad(z, sma = "bucket", routing = NULL)
+  # # add soil hydraulic parameters
+  # m <- update(
+  #   m, 
+  #   Sb = Sb, 
+  #   fc = Sb.fc, 
+  #   S_0 = S_0,
+  #   a.ss = a.ss,
+  #   M = M, 
+  #   etmult = etmult, 
+  #   a.ei = 0
+  # )
+  # 
+  # # predictions
+  # res <- predict(m, return_state = TRUE)
   
-  # predictions
-  res <- predict(m, return_state = TRUE)
+  ## until resolved:
+  # internal version, based on 
+  # https://github.com/josephguillaume/hydromad/blob/master/R/bucket.R
+  # with change:
+  # ET[t] <- Eintc + min(S[t], (Etrans + Ebare))
+  res <- .leakyBucket(z, Sb = Sb, fc = Sb.fc, S_0 = S_0, a.ss = a.ss, M = M, etmult = etmult, a.ei = 0)
   
   # combine date, inputs (z), predictions (res)
   res <- data.frame(
