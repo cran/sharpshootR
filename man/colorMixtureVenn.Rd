@@ -6,19 +6,28 @@
 \usage{
 colorMixtureVenn(
   chips,
-  mixingMethod = "spectra",
+  w = rep(1, times = length(chips))/length(chips),
+  mixingMethod = "exact",
   ellipse = FALSE,
-  labels = TRUE
+  labels = TRUE,
+  names = FALSE,
+  sncs = 0.85
 )
 }
 \arguments{
 \item{chips}{character vector of standard Munsell color notation (e.g. "10YR 3/4")}
+
+\item{w}{vector of proportions, can sum to any number, must be same length as \code{chips}}
 
 \item{mixingMethod}{approach used to simulate a mixture: see \code{aqp::mixMunsell} for details}
 
 \item{ellipse}{logical, use alternative ellipse-style (4 or 5 colors only)}
 
 \item{labels}{logical, print mixture labels}
+
+\item{names}{logical, print names outside of the "sets"}
+
+\item{sncs}{scaling factor for set names}
 }
 \value{
 nothing returned, function is called to create graphical output
@@ -30,9 +39,16 @@ Create a Venn Diagram of Simulated Color Mixtures
 
 if(requireNamespace("venn") & requireNamespace("gower")) {
 
-# "tan" / "dark red" / "dark brown"
 chips <- c('10YR 8/1', '2.5YR 3/6', '10YR 2/2')
+names(chips) <- c("tan", "dark red", "dark brown")
+
 colorMixtureVenn(chips)
+colorMixtureVenn(chips, names = TRUE)
+
+colorMixtureVenn(chips, w = c(1, 1, 1), names = TRUE)
+colorMixtureVenn(chips, w = c(10, 5, 1), names = TRUE)
 
 }
+
+
 }

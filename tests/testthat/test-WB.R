@@ -2,12 +2,10 @@ context("leaky bucket models")
 
 ## TODO: verify on paper
 
-
 test_that("thermic / xeric WB is reasonable", {
   
-  # this is only possible with required packages
-  if(!requireNamespace('hydromad'))
-    skip(message = 'this test requires the hydomad package')
+  # requires a non-CRAN package to function
+  skip_on_cran()
   
   # AMADOR soil series data
   AWC <- 47
@@ -36,9 +34,8 @@ test_that("thermic / xeric WB is reasonable", {
 
 test_that("thermic / udic WB is reasonable", {
   
-  # this is only possible with required packages
-  if(!requireNamespace('hydromad'))
-    skip(message = 'this test requires the hydomad package')
+  # requires a non-CRAN package to function
+  skip_on_cran()
   
   # LUCY soil series data
   AWC <- 207
@@ -60,4 +57,32 @@ test_that("thermic / udic WB is reasonable", {
   expect_equal(round(sum(wb$ET)), 810, tolerance = 0.01)
   
 })
+
+
+test_that("zero-PET, UDIC", {
+  
+  # requires a non-CRAN package to function
+  skip_on_cran()
+  
+  # UDIC
+  AWC <- 100
+  PPT <- c(98, 88, 99, 72, 65, 99, 107, 97, 85, 66, 70, 82)
+  PET <- rep(0, times = length(PPT))
+  
+  # no model spin-up
+  wb <- monthlyWB(AWC, PPT, PET, S_init = 1, starting_month = 1, rep = 1, keep_last = TRUE)
+  
+  # output structure
+  expect_true(inherits(wb, 'data.frame'))
+  expect_true(nrow(wb) == 12)
+  expect_true(all(wb$month == 1:12))
+  
+  # S always "full"
+  expect_true(all(wb$S == AWC))
+  
+  # U == PPT
+  expect_true(all(wb$PPT == wb$U))
+  
+})
+
 
