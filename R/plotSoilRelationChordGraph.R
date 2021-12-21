@@ -17,13 +17,6 @@
 #' @return nothing, function is called to generate graphical output
 #' @export
 #'
-#' @examples
-#' \donttest{
-#' data(amador)
-#' m <- component.adj.matrix(amador)
-#' plotSoilRelationChordGraph(m, 'amador')
-#' }
-#' 
 plotSoilRelationChordGraph <- function(m, s, mult=2, base.color='grey', highlight.colors=c('RoyalBlue', 'DarkOrange', 'DarkGreen'), add.legend=TRUE, ...) {
   
   # must have this package
