@@ -1,4 +1,5 @@
 ## TODO: provide examples for adjusting legend size / spacing
+## TODO: consider other colors: https://github.com/BlakeRMills/MetBrewer
 
 #' @title Visual Summary of Hillslope Position
 #' 
@@ -25,28 +26,16 @@
 #' 
 #' @author D.E. Beaudette
 #' 
-#' @examples 
-#' 
-#' \donttest{
-#' if(requireNamespace("curl") &
-#'    curl::has_internet() &
-#'    require(aqp) & 
-#'    require(soilDB)) {
-#'   
-#'   # soils of interest
-#'   s.list <- c('musick', 'cecil', 'drummer', 'amador', 'pentz', 'reiff', 
-#'               'san joaquin','montpellier','grangeville','pollasky','ramona')
-#'   
-#'   # fetch and convert data into an SPC
-#'   s <- fetchOSD(s.list, extended=TRUE)
-#'   
-#'   res <- vizHillslopePosition(s$hillpos)
-#'   print(res$fig)
-#'   
-#' }
-#' }
-#' 
 vizHillslopePosition <- function(x, s = NULL, annotations = TRUE, annotation.cex = 0.75, cols = c("#2B83BA", "#ABDDA4", "#FFFFBF", "#FDAE61", "#D7191C")) {
+  
+  # sanity checks on input
+  if(!inherits(x, 'data.frame')) {
+    stop('x must be a data.frame', call. = FALSE)
+  }
+  
+  if(nrow(x) < 1) {
+    stop('x must contain at least 1 row of data', call. = FALSE)
+  }
   
   # check for required packages
   if(!requireNamespace('dendextend', quietly=TRUE) | !requireNamespace('latticeExtra', quietly=TRUE))
