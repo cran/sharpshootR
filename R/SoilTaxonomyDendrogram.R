@@ -1,13 +1,17 @@
 
-
 #' @title Soil Taxonomy Dendrogram
 #' 
-#' @description Plot a dendrogram based on the first 4 levels of Soil Taxonomy, with soil profiles hanging below. A dissimilarity matrix is computed using Gower's distance metric for nominal-scale variables, based on order, sub order, great group, and subgroup level taxa. See the Details and Examples sections below for more information.
+#' @description Plot a dendrogram based on the first 4 levels of Soil Taxonomy, with soil profiles hanging below. A dissimilarity matrix is computed using Gower's distance metric for nominal (`KST.order = FALSE`) or ordinal (`KST.order = TRUE`) scale variables, based on soil order, suborder, greatgroup, and subgroup taxa.
 #'
 #' @param spc a `SoilProfileCollection` object, typically returned by `soilDB::fetchOSD`
+#' @param KST.order logical, encode / cluster taxa via ordinal factors, based on ordering within Keys to Soil Taxonomy
+#' @param rotationOrder character vector of profile IDs with desired ordering of leaves in the dendrogram from left to right; exact ordering is not always possible
+#' @param level character. One or more site-level columns in `spc`. Default: `"soilorder"`, `"suborder"`, `"greatgroup"` and `"subgroup"`
+#' @param cluster.method Either "divisive" (`cluster::diana()`; default) or "agglomerative" (`cluster::agnes()`)
+#' @param cluster.args Optional: additional arguments for `cluster::diana()` or `cluster::agnes()` cluster methods
 #' @param name column name containing horizon names
-#' @param name.style passed to `aqp::plotSPC` (default: `"right-center"`)
-#' @param rotationOrder numeric vector with desired ordering of leaves in the dendrogram from left to right, or character vector matching profile IDs
+#' @param name.style passed to `aqp::plotSPC`
+#' @param id.style passed to `aqp::plotSPC`
 #' @param max.depth depth at which profiles are truncated for plotting
 #' @param n.depth.ticks suggested number of ticks on the depth axis
 #' @param scaling.factor scaling factor used to convert depth units into plotting units
@@ -23,14 +27,14 @@
 #' @param dend.width dendrogram line width
 #' @param ... additional arguments to `aqp::plotSPC`
 #' 
-#' @details This function looks for specific site-level attributes named: `soilorder`, `suborder`, `greatgroup`, and `subgroup`. See `misc/soilTaxonomyDendrogram-examples.R` for some examples.
+#' @details This function looks for specific site-level attributes named: `"soilorder"`, `"suborder"`, `"greatgroup"`, and `"subgroup"`, or their NASIS physical column name analogues `"taxorder"`, `"taxsuborder"`, `"taxgrtgroup"`, and `"taxsubgrp"`. See \url{https://github.com/ncss-tech/sharpshootR/blob/master/misc/soilTaxonomyDendrogram-examples.R} for some examples.
 #' 
-#' The `rotationOrder` argument uses (requires) the `dendextend::rotate()` function to re-order leaves within the `hclust` representation of the ST hierarchy. Perfect sorting is not always possible.
+#' The `rotationOrder` argument uses `ape::rotateConstr()` to reorder leaves within the `hclust` representation of the ST hierarchy. Perfect sorting is not always possible.
 #'
 #' @return An invisibly-returned list containing:
 #'
 #'   * `dist`: pair-wise dissimilarity matrix
-#'   * `order`: final ordering of hclust leaves
+#'   * `order`: final ordering of `hclust` leaves
 #'   
 #' @author D.E. Beaudette
 #' 
@@ -41,41 +45,161 @@
 #' # built-in data, same as results from soilDB::fetchOSD()
 #' data("OSDexamples")
 #' 
-#' # use first 8 profiles
+#' # examples using first 8 profiles
+#' 
+#' # KST-style ordering
 #' SoilTaxonomyDendrogram(
-#' OSDexamples$SPC[1:8, ], width = 0.3, name.style = 'center-center'
+#'   OSDexamples$SPC[1:8, ], width = 0.3, name.style = 'center-center',
+#'   KST.order = TRUE
 #' )
 #' 
-SoilTaxonomyDendrogram <- function(spc, name='hzname', name.style='right-center', rotationOrder=NULL, max.depth=150, n.depth.ticks=6, scaling.factor=0.015, cex.names=0.75, cex.id=0.75, axis.line.offset=-4, width=0.1, y.offset=0.5, shrink=FALSE, font.id=2, cex.taxon.labels=0.66, dend.color=par('fg'), dend.width=1, ...) {
-	
-	# convert relevant columns into factors
-	spc$soilorder <- factor(spc$soilorder)
-	spc$suborder <- factor(spc$suborder)
-	spc$greatgroup <- factor(spc$greatgroup)
-	spc$subgroup <- factor(spc$subgroup)
-	
+#' # classic ordering, based on nominal scale variables (unordered factors)
+#' SoilTaxonomyDendrogram(
+#'   OSDexamples$SPC[1:8, ], width = 0.3, name.style = 'center-center',
+#'   KST.order = FALSE
+#' )
+#' 
+#' 
+SoilTaxonomyDendrogram <- function(spc, 
+                                   KST.order = TRUE, 
+                                   rotationOrder = NULL, 
+                                   level = c(
+                                     soilorder = "soilorder",
+                                     suborder = "suborder",
+                                     greatgroup = "greatgroup",
+                                     subgroup = "subgroup"
+                                   ),
+                                   cluster.method = c("divisive", "agglomerative"),
+                                   cluster.args = list(),
+                                   name = 'hzname', 
+                                   name.style = 'center-center', 
+                                   id.style = 'side', 
+                                   max.depth = max(spc), 
+                                   n.depth.ticks = 6, 
+                                   scaling.factor = 0.015, 
+                                   cex.names = 0.75, 
+                                   cex.id = 0.75, 
+                                   axis.line.offset = -4, 
+                                   width = 0.1, 
+                                   y.offset = 0.5, 
+                                   shrink = FALSE, 
+                                   font.id = 2, 
+                                   cex.taxon.labels = 0.66, 
+                                   dend.color = par('fg'), 
+                                   dend.width = 1, 
+                                   ...) {
+           
+  # choice of cluster methods: use diana() or agnes()
+  cluster.method <- match.arg(tolower(cluster.method), c("divisive", "agglomerative"))
+  
+  # attempt KST-based ordering:
+  # 1. setup ordinal factors based on order of taxa with each level of ST hierarchy
+  # 2. rotate dendrogram to reflect ordering of subgroups within keys
+  if (KST.order) {
+    
+    ## TODO: require latest once on CRAN 0.2.x
+    # requires SoilTaxonomy >= 0.1.5 (2022-02-15)
+    if (!requireNamespace('SoilTaxonomy', quietly = TRUE)) {
+      stop('please install the `SoilTaxonomy` package', call. = FALSE)
+    }
+    
+    ## TODO: this is implemented in the development version, wait for CRAN version before using here
+    ST_unique_list <- NULL
+    load(system.file("data/ST_unique_list.rda", package = "SoilTaxonomy")[1])
+    
+    # support for NASIS physical column names (NASIS possibly should be default?)
+    if (is.null(spc$soilorder) & !is.null(spc$taxorder)) {
+      spc$soilorder <- spc$taxorder
+    }
+    if (is.null(spc$suborder) & !is.null(spc$taxsuborder)) {
+      spc$suborder <- spc$taxsuborder
+    }    
+    if (is.null(spc$greatgroup) & !is.null(spc$taxgrtgroup)) {
+      spc$greatgroup <- spc$taxgrtgroup
+    }    
+    if (is.null(spc$subgroup) & !is.null(spc$taxsubgrp)) {
+      spc$subgroup <- spc$taxsubgrp
+    }
+    
+    # create ordered factors, dropping unused levels, ignore case
+    .soilorder <- droplevels(factor(tolower(spc$soilorder), levels = ST_unique_list$order, ordered = TRUE))
+    .suborder <- droplevels(factor(tolower(spc$suborder), levels = ST_unique_list$suborder, ordered = TRUE))
+    .greatgroup <- droplevels(factor(tolower(spc$greatgroup), levels = ST_unique_list$greatgroup, ordered = TRUE))
+    .subgroup <- droplevels(factor(tolower(spc$subgroup), levels = ST_unique_list$subgroup, ordered = TRUE))
+    
+    # check for NA (obsolete taxa / typos); fall back to nominal factors
+    if (any(is.na(.soilorder))) {
+      .soilorder <- factor(spc$soilorder)
+      message('obsolete soil order or typo, reverting to nominal factors')
+    }
+    
+    if (any(is.na(.suborder))) {
+      .suborder <- factor(spc$suborder)
+      message('obsolete suborder or typo, reverting to nominal factors')
+    }
+    
+    if (any(is.na(.greatgroup))) {
+      .greatgroup <- factor(spc$greatgroup)
+      message('obsolete greatgroup or typo, reverting to nominal factors')
+    }
+    
+    if (any(is.na(.subgroup))) {
+      .subgroup <- factor(spc$subgroup)
+      message('obsolete subgroup or typo, reverting to nominal factors')
+    }
+    
+    # replace original values with ordered factors if possible
+    spc$soilorder <- .soilorder
+    spc$suborder <- .suborder
+    spc$greatgroup <- .greatgroup
+    spc$subgroup <- .subgroup
+    
+    # rotate as close to KST ordering as possible
+    if (is.null(rotationOrder)) {
+      rotationOrder <- profile_id(spc)[order(spc[[level[length(level)]]])]
+    }
+    
+  } else {
+    # treat all `level` columns as nominal factors
+    # this is required to ensure columns with n=1 or n=2 levels are not "binary" in clustering algorithms
+    for (l in level) {
+      spc[[l]] <- factor(spc[[l]])
+    }
+  }
+  
 	# extract site attributes as data.frame
 	s <- site(spc)
+	
 	# copy soil ID to row.names, so that they are preserved in the distance matrix
 	row.names(s) <- s[[idname(spc)]]
 	
-	# compute distance matrix from first 4 levels of Soil Taxonomy
-	s.dist <- daisy(s[, c('soilorder', 'suborder', 'greatgroup', 'subgroup')], metric='gower')
-	s.hclust <- as.hclust(diana(s.dist))
+	# compute distance matrix from specified levels
+	s.dist <- daisy(s[, level, drop = FALSE], metric = 'gower')
 	
-	if(!missing(rotationOrder)) {
-	  # check for required packages
-	  if(!requireNamespace('dendextend', quietly=TRUE))
-	    stop('please install the `dendextend` packages', call.=FALSE)
-	  
-	  # rotate branches as closely as possible to `rotationOrder`
-	  # sorting ideally results in left -> right orientation
-	  s.hclust <- dendextend::rotate(s.hclust, order = rotationOrder)
+	if (cluster.method == "divisive") {
+	  # cluster::diana is the default/"divisive" method
+	  s.clust <- do.call(cluster::diana, c(list(x = s.dist), cluster.args))
+	} else if (cluster.method == "agglomerative") {
+	  # cluster::agnes is the agglomerative method
+	  s.clust <- do.call(cluster::agnes, c(list(x = s.dist), cluster.args))
 	}
 	
 	# convert to phylo class
-	dend <- as.phylo(s.hclust)
+	dend <- as.phylo(as.hclust(s.clust))
 	
+	## 2022-05-04: switching to ape rotation methods
+	# requires vector of tip labels
+	if (!is.null(rotationOrder)) {
+	  # check that none are missing
+	  if (all(rotationOrder %in% profile_id(spc)) && length(rotationOrder) == length(spc)) {
+	    # attempt rotation, may not give the exact ordering
+	    dend <- rotateConstr(dend, constraint = rotationOrder) 
+	  } else {
+	    message('`rotationOrder` does not contain a complete set of profile IDs')
+	  }
+	}
+	
+	## TODO: these estimates work for divisive, need adjustments for agglomerative
 	# determine best-possible locations for taxa names
 	max.dist <- max(s.dist)
 	taxa.lab.y.vect <- c(max.dist / 1.6666666, (max.dist / 1.6666666) + 0.12)
@@ -87,34 +211,54 @@ SoilTaxonomyDendrogram <- function(spc, name='hzname', name.style='right-center'
 	# on.exit(par(op))
 	
 	# setup plot and add dendrogram
-	par(mar=c(0,0,0,0))
-	plot(dend, cex=0.8, direction='up', y.lim=c(4,0), x.lim=c(0.5, length(spc)+1), show.tip.label=FALSE, edge.color=dend.color, edge.width=dend.width)
+	par(mar = c(0,0,0,0))
+	plot(dend, cex = 0.8, direction = 'up', y.lim = c(4,0), x.lim = c(0.5, length(spc) + 1), show.tip.label = FALSE, edge.color = dend.color, edge.width = dend.width)
 	
 	# get the last plot geometry
 	lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
   
 	# vector of indices for plotting soil profiles below leaves of dendrogram
-	new_order <- s.hclust$order
+	# requires conversion back to hclust
+	# in case `dend` was re-ordered
+	new_order <- as.hclust(dend)$order
 	
 	# plot the profiles, in the ordering defined by the dendrogram
 	# with a couple fudge factors to make them fit
-	plotSPC(spc, name=name, name.style=name.style, plot.order=new_order, max.depth=max.depth, n.depth.ticks=n.depth.ticks, scaling.factor=scaling.factor, cex.names=cex.names, cex.id=cex.id, axis.line.offset=axis.line.offset, width=width, y.offset=max(lastPP$yy) + y.offset, id.style='side', shrink=shrink, font.id=font.id, add=TRUE, ...)
+	plotSPC(spc, 
+	        name = name, 
+	        name.style = name.style, 
+	        plot.order = new_order, 
+	        max.depth = max.depth, 
+	        n.depth.ticks = n.depth.ticks, 
+	        scaling.factor = scaling.factor, 
+	        cex.names = cex.names, 
+	        cex.id = cex.id, 
+	        axis.line.offset = axis.line.offset, 
+	        width = width, 
+	        y.offset = max(lastPP$yy) + y.offset, 
+	        id.style = id.style, 
+	        shrink = shrink, 
+	        font.id = font.id, 
+	        add = TRUE, 
+	        ...
+	)
 	
-	# generate taxonomic labels and their positions under the dendrogram
-	lab <- s[new_order, 'subgroup']
+	# generate subgroup labels and their positions under the dendrogram
+	lab <- s[new_order, level[length(level)]]
 	unique.lab <- unique(lab)
 	group.lengths <- rle(as.numeric(lab))$lengths
 	lab.x.positions <- (cumsum(group.lengths) - (group.lengths / 2)) + 0.5
-	lab.y.positions <- rep(taxa.lab.y.vect, length.out=length(unique.lab))
+	lab.y.positions <- rep(taxa.lab.y.vect, length.out = length(unique.lab))
 	
-	# add labels-- note manual tweaking of y-coordinates
-	text(lab.x.positions, lab.y.positions, unique.lab, cex=cex.taxon.labels, adj=0.5, font=3)
+	# add subgroup labels
+	# note manual tweaking of y-coordinates
+	text(lab.x.positions, lab.y.positions, unique.lab, cex = cex.taxon.labels, adj = 0.5, font = 3)
 	
 	# invisibly return some information form the original objects
 	invisible(
 	  list(
-	    dist=s.dist,
-	    order=s.hclust$order
+	    dist = s.dist,
+	    order = new_order
 	  )
 	)
 }

@@ -12,7 +12,7 @@
 #' 
 #' @param AWC available water-holding capacity (mm), typically the value used in `monthlyWB()` and stored as an attribute of `WB`
 #' 
-#' @param showAWC now deprecated, always 'below'
+#' @param ylim optional vector of y-axis limits, `c(-min, max)`, typically used when comparing drastically different water balances in the same figure. Default limits are usually best for a single water balance plot.
 #'
 #' @param sw.col color for soil water ("storage)
 #' 
@@ -22,9 +22,15 @@
 #' 
 #' @param deficit.col color for deficit
 #' 
-#' @param pch plotting character for PPT and PET points (`c('P', 'E')`)
+#' @param pch plotting character for PPT and PET points
 #' 
 #' @param pt.cex character expansion factor for PPT and PET points
+#' 
+#' @param pt.col point symbol color for PPT and PET points
+#' 
+#' @param pt.bg point symbol background color for PPT and PET points
+#' 
+#' @param lty line type for PPT and PET lines (`c(1, 2)`)
 #' 
 #' @param lwd line width for PPT and PET curves
 #' 
@@ -84,7 +90,7 @@
 #' 
 #' }
 #' 
-plotWB <- function(WB, AWC = attr(WB, 'AWC'), showAWC = 'below', sw.col = '#377EB8', surplus.col = '#4DAF4A', et.col = '#E41A1C', deficit.col = '#FF7F00', pch = c('P', 'E'), pt.cex = 0.85, lwd = 2, n.ticks = 8, grid.col = grey(0.65), month.cex = 1, legend.cex = 0.9) {
+plotWB <- function(WB, AWC = attr(WB, 'AWC'), sw.col = '#377EB8', surplus.col = '#4DAF4A', et.col = '#E41A1C', deficit.col = '#FF7F00', pch = c(21, 21), pt.cex = 1, pt.col = par('bg'), pt.bg = par('fg'), lty = c(1, 2), lwd = 2, n.ticks = 8, grid.col = grey(0.65), month.cex = 1, legend.cex = 0.9, ylim) {
   
   # number of time steps, usually months
   n <- nrow(WB)
@@ -92,8 +98,33 @@ plotWB <- function(WB, AWC = attr(WB, 'AWC'), showAWC = 'below', sw.col = '#377E
   ## always plotting "below" c/o J.Skovlin
   ## this method is more intuitive and simpler to maintain
   
-  y.min <- min(c(WB$D, -AWC))
-  y.max <- max(c(WB$U, WB$PPT, WB$PET))
+  # manual override on y-limits
+  if(!missing(ylim)) {
+    if(inherits(ylim, 'numeric') & length(ylim) == 2) {
+      y.min <- ylim[1]
+      y.max <- ylim[2]
+    } else {
+      stop('If specified, `ylim` must be a 2 element numeric vector', call. = FALSE)
+    }
+    
+  } else {
+    # determine using the source data
+    
+    # need the most negative value:
+    # when AWC == S: -AWC + Deficit 
+    # else: min(-AWC, D)
+    y.min <- min(
+      c(
+        ifelse(WB$S == AWC & WB$D < 0, -AWC + WB$D, -AWC),
+        WB$D
+      )
+    )
+    
+    # which ever is greatest: U (surplus), PPT, PET
+    y.max <- max(c(WB$U, WB$PPT, WB$PET))
+  }
+  
+  
   
   # specific axis
   ppt.axis <- pretty(c(0, y.max), n = n.ticks)
@@ -132,39 +163,40 @@ plotWB <- function(WB, AWC = attr(WB, 'AWC'), showAWC = 'below', sw.col = '#377E
   # annotate left-hand axes
   mtext(text = 'Inputs | Outputs | Storage    (mm)', side = 2, line = 2.25, cex=0.85, font=2)
   
-  # annotate AWC
-  mtext(sprintf("AWC: %smm", AWC), side = 3, at = 0, cex = 0.85, font = 3, adj = 0)
-  
   # month axis: no line, just ticks
   axis(side = 1, at = bp, labels = WB$mo, line = 0, tick = TRUE, font = 2, cex = month.cex, col = NA, col.ticks = par('fg'))
   
-  # using a bg-colored plotting symbol to paint behind PPT and PET plotting symbols
-  # must be a little smaller than the symbol
-  bg.cex <- strheight(pch[1], font = 2, cex = pt.cex) / 7
-  
   # PPT
-  points(bp, WB$PPT, col=par('bg'), pch = 15, cex = bg.cex)
-  lines(bp, WB$PPT, type='b', col=par('fg'), lwd = lwd, pch = pch[1], cex = pt.cex, font = 2)
+  lines(bp, WB$PPT, type ='l', col = pt.bg, lwd = lwd, lty = lty[1])
+  points(bp, WB$PPT, col = pt.col, bg = pt.bg, pch = pch[1], cex = pt.cex)
   
   # PET
-  points(bp, WB$PET, col=par('bg'), pch = 15, cex = bg.cex)
-  lines(bp, WB$PET, type='b', col=par('fg'), lwd = lwd, pch = pch[2], cex = pt.cex, font = 2)
+  lines(bp, WB$PET, type ='l', col = pt.bg, lwd = lwd, lty = lty[2])
+  points(bp, WB$PET, col = pt.col, bg = pt.bg, pch = pch[2], cex = pt.cex)
   
   # legend
   legend(
-    x = max(bp), 
+    x = median(bp), 
     y = y.max, 
     horiz = TRUE, 
-    legend = c('Storage', 'Surplus', 'AET', 'Deficit', 'PPT|PET'), 
+    legend = c('Storage', 'Surplus', 'AET', 'Deficit', 'PPT', 'PET'), 
     col = c(sw.col, surplus.col, et.col, deficit.col, 1, 1), 
-    pch = c(15, 15, 15, 15, NA), 
-    lty = c(NA, NA, NA, NA, 1), 
+    pch = c(15, 15, 15, 15, NA, NA), 
+    lty = c(NA, NA, NA, NA, lty[1], lty[2]), 
+    lwd = c(NA, NA, NA, NA, 2, 2),
     bty='n', 
     pt.cex = 1.5, 
     xpd = NA, 
     cex = legend.cex, 
-    xjust = 1, 
+    xjust = 0.5, 
     yjust = -0.25
   )
+  
+  # annotate available water storage
+  mtext(sprintf("Storage: %s mm", AWC), side = 1,  at = 0, cex = 0.85, adj = 0, line = 2.5)
+  
+  # annotate total deficit
+  sumD <- bquote(sum(Deficit)  ==  .(round(sum(WB$D)))~mm)
+  mtext(sumD, side = 1,  at = max(bp), cex = 0.85,  adj = 1, line = 2.5)
   
 }

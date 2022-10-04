@@ -7,26 +7,27 @@
 plotWB(
   WB,
   AWC = attr(WB, "AWC"),
-  showAWC = "below",
   sw.col = "#377EB8",
   surplus.col = "#4DAF4A",
   et.col = "#E41A1C",
   deficit.col = "#FF7F00",
-  pch = c("P", "E"),
-  pt.cex = 0.85,
+  pch = c(21, 21),
+  pt.cex = 1,
+  pt.col = par("bg"),
+  pt.bg = par("fg"),
+  lty = c(1, 2),
   lwd = 2,
   n.ticks = 8,
   grid.col = grey(0.65),
   month.cex = 1,
-  legend.cex = 0.9
+  legend.cex = 0.9,
+  ylim
 )
 }
 \arguments{
 \item{WB}{output from \code{monthlyWB()}}
 
 \item{AWC}{available water-holding capacity (mm), typically the value used in \code{monthlyWB()} and stored as an attribute of \code{WB}}
-
-\item{showAWC}{now deprecated, always 'below'}
 
 \item{sw.col}{color for soil water ("storage)}
 
@@ -36,9 +37,15 @@ plotWB(
 
 \item{deficit.col}{color for deficit}
 
-\item{pch}{plotting character for PPT and PET points (\code{c('P', 'E')})}
+\item{pch}{plotting character for PPT and PET points}
 
 \item{pt.cex}{character expansion factor for PPT and PET points}
+
+\item{pt.col}{point symbol color for PPT and PET points}
+
+\item{pt.bg}{point symbol background color for PPT and PET points}
+
+\item{lty}{line type for PPT and PET lines (\code{c(1, 2)})}
 
 \item{lwd}{line width for PPT and PET curves}
 
@@ -49,6 +56,8 @@ plotWB(
 \item{month.cex}{scaling factor for month labels (x-axis)}
 
 \item{legend.cex}{scaling factor for legend}
+
+\item{ylim}{optional vector of y-axis limits, \code{c(-min, max)}, typically used when comparing drastically different water balances in the same figure. Default limits are usually best for a single water balance plot.}
 }
 \value{
 nothing, function is called to generate graphical output

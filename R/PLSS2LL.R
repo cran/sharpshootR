@@ -98,7 +98,7 @@ formatPLSS <- function(p, type = 'SN') {
       p.r <- paste0(p.r, collapse = '0')
 
       # add 'SN to section number and pad single digit section numbers
-      p.s <- ifelse(is.na(p$s[i]), '', ifelse(p$s[i] > 9, paste0('SN', p$s[i]), paste0('SN', 0, p$s[i])))
+      p.s <- ifelse(is.na(p$s[i]), '', ifelse(p$s[i] > 9, p$s[i], paste0("0", p$s[i])))
 
       # replace NA -> '' IN S, Q and QQ sections
       p.q <- ifelse(is.na(p$q[i]), '', p$q[i])
@@ -107,10 +107,14 @@ formatPLSS <- function(p, type = 'SN') {
       # format the first chunk
       f.1 <- ifelse(nchar(p.s) == 0, 
                     paste0(paste0(c(p$m[i], p.t, p.r), collapse="0"), "0"), # no section
-                    paste0(c(p$m[i], p.t, p.r, p.s, 'A'), collapse = '0'))       # with section
+                    paste0(c(p$m[i], p.t, p.r, paste0("SN", p.s, "0", 'A')), collapse = '0'))       # with section
       
       # format the (optional) Q and QQ sections
       f.2 <- paste0(p.qq, p.q)
+      if (nchar(f.2) != 4) {
+        message("Dropping quarter and quarter-quarter sections due to bad formatting: ", f.2)
+        f.2 <- ""
+      }
       f[i] <- paste0(f.1, f.2)
 
       # handle if sections are protracted and unprotracted blocks

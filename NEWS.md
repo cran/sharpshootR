@@ -1,3 +1,22 @@
+# sharpshootR 1.11 (2022-10-04)
+ * adding SoilTaxonomy package to suggests, to allow for better encoding of taxa levels by `SoilTaxonomyDendrogram()`
+ * `SoilTaxonomyDendrogram()` gains argument `KST.order` to adjust encoding / ordering criteria and `level` argument to specify the taxonomic levels to use
+ * `SoilTaxonomyDendrogram()` gains argument `cluster.method` to select `"divisive"` (default) or `"agglomerative"` clustering methods. Additional arguments to `cluster::diana()` and `cluster::agnes()` may be specified with a list supplied as `cluster.args` argument
+ * Spatial/raster sampling functions `sampleRasterStackByMU()`, `samplingStability()`, `sample.by.poly()` and `MoranI_By_Raster()` now use terra internally
+ * `aspect.plot()` now returns the Rayleigh Uniformity statistic and corresponding p-value as an attribute named `"uniformity"`
+ * bug fix in `monthlyWB_summary()` to address warning / `Inf` when 0 dry days
+ * `plotWB()` aesthetic fixes and additional arguments, including manual specification of y-axis limits
+ * `aggregateColorPlot()` gets a new argument for setting label orientation
+ * geomorphic `viz*` functions now use an iterative approach to re-arrange dendrogram according to "hydologic ordering"
+ * hydrologic ordering functions now exported: `hydOrder()` and `iterateHydOrder()`
+ * new function `plotGeomorphCrossSection()` presents a `SoilProfileCollection` aligned to a geomorphic summary as cross-section
+ * new function `reconcileOSDGeomorp()` convenience function for reconciling SPC and geomorphic summary tables as returned by `soilDB::fetchOSD()`
+ * `plotProfileDendrogram()` gains argument for re-ordering dendrogram as close to original profile IDs as possible
+
+# sharpshootR 1.9.1 (2022-02-16)
+ * bugfix in `plotWB()` related to figure y-scale range
+ * `plotWB_lines()` gets `legend.cex` and aesthetic adjustments to legend position
+ 
 # sharpshootR 1.9 (2022-01-03)
  * CRAN release
  * water balance functions now depend on hydromad >= 0.9-27
