@@ -32,7 +32,6 @@ importFrom(aqp,
            idname,
            plotSPC,
            profile_id,
-           'proj4string<-',
            site,
            huePosition,
            invertLabelColor,
@@ -103,19 +102,6 @@ importFrom(soilDB,
   waterDayYear
 )
 
-importFrom(sp,
-  spsample,
-  coordinates,
-  over,
-  SpatialPointsDataFrame,
-  is.projected,
-  CRS,
-  spTransform,
-  SpatialPolygons,
-  proj4string,
-  Polygons,
-  Polygon
-)
 
 importFrom(reshape2,
   dcast,

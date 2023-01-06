@@ -1,4 +1,15 @@
+# sharpshootR 2.0 (2022-12-27)
+ * all functions depending on `sp` classes or methods have been converted to `sf`
+ * water balance helper functions converted from `sp`/`rgeos` to `sf`
+ * breaking changes in `plotTransect()`, coordinate are now provided as an additional argument / `sf` object
+ * breaking changes in `LL2PLSS()`, all return data now packed into `sf` object vs. `list` (sharpshootR <= 1.12)
+ * `generateLineHash()` now uses `sf` class LINESTRING features
+ * `huePositionPlot()` gains `origin` argument for calculation of dE00 from arbitrary colors specified in CIELAB or Munsell
+ * breaking changes in `joinAdjacency()`, now expects a `data.frame` (or compatible) vs. `SpatialLinesDataFrame`
+ * `polygonAdjacency()` now compatible with `sf` objects
+
 # sharpshootR 1.12 (2022-12-09)
+ * CRAN release
  * adding SoilTaxonomy package to suggests, to allow for better encoding of taxa levels by `SoilTaxonomyDendrogram()`
  * `SoilTaxonomyDendrogram()` gains argument `KST.order` to adjust encoding / ordering criteria and `level` argument to specify the taxonomic levels to use
  * `SoilTaxonomyDendrogram()` gains argument `cluster.method` to select `"divisive"` (default) or `"agglomerative"` clustering methods. Additional arguments to `cluster::diana()` and `cluster::agnes()` may be specified with a list supplied as `cluster.args` argument
