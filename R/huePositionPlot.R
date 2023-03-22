@@ -19,6 +19,8 @@
 #' @param origin.cex scaling for origin point
 #' 
 #' @param grid.res grid resolution for contours, units are CIELAB A/B coordinates. Caution, small values result in many pair-wise distances which could take a very long time.
+#' 
+#' @param ... additional arguments to [contour()]
 #'
 #' @export
 #' 
@@ -43,7 +45,7 @@
 #' 
 #' huePositionPlot(value = 3, chroma = 4, origin = '10YR 3/4', origin.cex = 0.5)
 
-huePositionPlot <- function(value = 6, chroma = 6, chip.cex = 4.5, label.cex = 0.75, contour.dE00 = FALSE, origin = NULL, origin.cex = 0.75, grid.res = 2) {
+huePositionPlot <- function(value = 6, chroma = 6, chip.cex = 4.5, label.cex = 0.75, contour.dE00 = FALSE, origin = NULL, origin.cex = 0.75, grid.res = 2, ...) {
   
   # interpret !NULL origin argument
   if(!is.null(origin)) {
@@ -83,9 +85,10 @@ huePositionPlot <- function(value = 6, chroma = 6, chip.cex = 4.5, label.cex = 0
        data = x, 
        type = 'n', 
        asp = 0.75, 
-       xlab = 'A-coordinate', 
-       ylab = 'B-coordinate', 
+       xlab = '', 
+       ylab = '', 
        main = 'Hue Order per TN #2\nCIELAB Colorspace',
+       col.main = par('fg'),
        axes = FALSE
   )
   
@@ -152,13 +155,6 @@ huePositionPlot <- function(value = 6, chroma = 6, chip.cex = 4.5, label.cex = 0
       byrow = FALSE
     )
     
-    # add contours
-    contour(
-      x = A.seq, 
-      y = B.seq,
-      z = m,
-      add = TRUE
-    )
   }
 
   # color chips
@@ -186,11 +182,23 @@ huePositionPlot <- function(value = 6, chroma = 6, chip.cex = 4.5, label.cex = 0
     )
   }
   
+  # overlay contours last, if requested
+  if(contour.dE00) {
+    contour(
+      x = A.seq, 
+      y = B.seq,
+      z = m,
+      add = TRUE,
+      ...
+    )
+  }
+  
   # axis
   box()
-  axis(side = 1, cex.axis = 0.8)
-  axis(side = 2, cex.axis = 0.8, las = 1)
-  
+  axis(side = 1, cex.axis = 0.8, col.axis = par('fg'), col = par('fg'))
+  axis(side = 2, cex.axis = 0.8, col.axis = par('fg'), col = par('fg'), las = 1)
+  mtext('A-coordinate', side = 1, col = par('fg'), line = 2.5)
+  mtext('B-coordinate', side = 2, col = par('fg'), line = 2.5)
 }
 
 

@@ -3,8 +3,8 @@ Type: Package
 Encoding: UTF-8
 Title: A Soil Survey Toolkit
 Description: Miscellaneous soil data management, summary, visualization, and conversion utilities to support soil survey.
-Version: 2.0
-Date: 2022-12-27
+Version: 2.1
+Date: 2023-03-21
 Authors@R: c(
   person(given="Dylan", family="Beaudette", role = c("cre", "aut"), email = "dylan.beaudette@usda.gov"), 
   person(given="Jay", family="Skovlin", role = c("aut")), 
@@ -29,12 +29,12 @@ Imports: grDevices, graphics, methods, stats, utils, aqp, ape, soilDB,
         RColorBrewer, plyr, digest, e1071, stringi, parallel, curl,
         grid
 Additional_repositories: https://hydromad.github.io
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2022-12-28 00:30:16 UTC; Dylan.Beaudette
+Packaged: 2023-03-21 17:35:09 UTC; Dylan.Beaudette
 Author: Dylan Beaudette [cre, aut],
   Jay Skovlin [aut],
   Stephen Roecker [aut],
   Andrew Brown [aut],
   USDA-NRCS Soil Survey Staff [ctb]
-Date/Publication: 2023-01-06 14:50:10 UTC
+Date/Publication: 2023-03-22 16:50:05 UTC
