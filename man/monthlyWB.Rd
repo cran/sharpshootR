@@ -2,7 +2,6 @@
 % Please edit documentation in R/monthlyWB.R
 \name{monthlyWB}
 \alias{monthlyWB}
-\alias{monthlyWB_summary}
 \title{Monthly Water Balances}
 \usage{
 monthlyWB(
@@ -12,50 +11,49 @@ monthlyWB(
   S_init = 1,
   starting_month = 1,
   rep = 1,
-  keep_last = FALSE
+  keep_last = FALSE,
+  distribute = FALSE,
+  method = c("equal", "random", "gaussian"),
+  k = 10
 )
-
-monthlyWB_summary(w)
 }
 \arguments{
-\item{AWC}{available water-holding capacity (mm), typically thickness (mm) * awc (fraction)}
+\item{AWC}{numeric, available water-holding capacity (mm), typically thickness (mm) * awc (fraction)}
 
-\item{PPT}{time-series of monthly PPT (mm), calendar year ordering}
+\item{PPT}{numeric, time-series of monthly PPT (mm), calendar year ordering}
 
-\item{PET}{time-series of monthly PET (mm), calendar year ordering}
+\item{PET}{numeric, time-series of monthly PET (mm), calendar year ordering}
 
-\item{S_init}{initial fraction of \code{AWC} filled with water (values 0-1)}
+\item{S_init}{numeric, initial fraction of \code{AWC} filled with water (values 0-1)}
 
-\item{starting_month}{starting month index, 1=January, 9=September}
+\item{starting_month}{integer, starting month index, 1=January, 9=September}
 
-\item{rep}{number of cycles to run water balance}
+\item{rep}{integer, number of cycles to run water balance}
 
-\item{keep_last}{keep only the last iteration of the water balance}
+\item{keep_last}{logical, keep only the last iteration of the water balance}
 
-\item{w}{used for for \code{monthlyWB_summary()}: a data.frame, such as result of \code{monthlyWB()};}
+\item{distribute}{logical, distribute monthly data into \code{k} divisions within each month}
+
+\item{method}{method for distributing PPT and PET into \code{k} divisions:
+\itemize{
+\item 'equal' divides PPT and PET into \code{k} equal amounts
+\item 'random' divides PPT and PET into random proportions generated via multinominal simulation
+\item 'gaussian' divides PPT and PET according to a bell-shaped curve centered in the middle of each month
+}}
+
+\item{k}{integer, number of divisions}
 }
 \value{
 a \code{data.frame} with the following elements:
-
 \itemize{
-\item{PPT: }{monthly PPT (mm)}
-\item{PET: }{monthly PET (mm)}
-\item{U: }{monthly surplus (mm)}
-\item{S: }{monthly soil moisture storage (mm)}
-\item{ET: }{monthly AET (mm)}
-\item{D: }{monthly deficit (mm)}
-\item{month: }{month number}
-\item{mo: }{month label}
-}
-
-\code{monthlyWB_summary()}: a \code{data.frame} containing:
-\itemize{
-\item cumulative (\code{dry}, \code{moist}, \code{wet}) days
-\item consecutive (\code{dry_con}, \code{moist_con}, \code{wet_con}) days
-\item total deficit (\code{total_deficit}) in mm
-\item total surplus (\code{total_surplus}) in mm
-\item total actual evapotranspiration (\code{total_AET}) in mm
-\item annual actual evapotranspiration to potential evapotranspiration ratio (\code{annual_AET_PET_ratio})
+\item PPT: monthly PPT (mm)
+\item PET: monthly PET (mm)
+\item U:   monthly surplus (mm)
+\item S:   monthly soil moisture storage (mm)
+\item ET:  monthly AET (mm)
+\item D:   monthly deficit (mm)
+\item month: month number
+\item mo:  month label
 }
 }
 \description{
