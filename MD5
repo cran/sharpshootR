@@ -1,6 +1,6 @@
-d979acefa9cf2e39cd0d8ec1aa70bb6d *DESCRIPTION
-6a284c601393d37f328158beb2f8dfc7 *NAMESPACE
-8767e2f0013c01a3b14aa9aa52aa5819 *NEWS.md
+dd444c1eb842d84fd3c2c07f3d5c811d *DESCRIPTION
+18854454656b820098e1f0644965a036 *NAMESPACE
+c70a84a7fd58adf7c7c46ba687a0b793 *NEWS.md
 0c0506cd397890a1c8f7b2775844adb4 *R/CDEC_StationInfo.R
 15f7db3c4df516b71d45d67b6b5ad5b9 *R/CDECquery.R
 e7e237620918ab034d2f77ec312ca198 *R/CDECsnowQuery.R
@@ -14,8 +14,8 @@ cceb26552f4dbcdaf2903b139e27dfe8 *R/Moran_I_ByRaster.R
 eba371c4a02ae73d8e720c3e16ae920d *R/aggregateColorPlot.R
 1cbfdb07a8ef7d7167979c9f9a98839c *R/aspect.plot.R
 a6ebc16e26218160c59ab16391af7df7 *R/colorMixtureVenn.R
-3932b22441c22624080c5c477532781d *R/component.adj.matrix.R
-5421b809ef894e1f0694c74689ec17f4 *R/dailyWB.R
+42d5932d2c3c8e24399328f0d3b4871e *R/component.adj.matrix.R
+24b9379bcabb6f2b348dce33e465f084 *R/dailyWB.R
 d7453bbf5ffd57ec1ba7501b94515a5e *R/dailyWB_SSURGO.R
 0e7ee18bcd0d82e228c19457ac3d4924 *R/data-documentation.R
 1a440bbb9fcffae3ad39593c698fbd60 *R/diagnosticPropertyPlot.R
@@ -139,7 +139,7 @@ b9e65a6c56bb530255a3cbdf9ef9ed47 *man/vizGeomorphicComponent.Rd
 aaa95e3ac1fa9f1fd164ea0eedd236d1 *man/vizSurfaceShape.Rd
 d8df823418aa7ce28eeeabfa9e0dea61 *man/vizTerracePosition.Rd
 7997d628bff24ed1e5d3829868fc890b *tests/testthat.R
-3d8af39f16df973f1d8523cf20e2e80e *tests/testthat/Rplots.pdf
+731a744990fee76aac882704f51c03ce *tests/testthat/Rplots.pdf
 2ba45502b4b5a4200fb8acde9d4ae6b4 *tests/testthat/test-FFD.R
 88233a60aded4c9a22db3e59ae567af5 *tests/testthat/test-PLSS2LL.R
 04dfbb8aa2c030145b5b8f5de436ad9e *tests/testthat/test-SoilTaxonomyDendrogram.R

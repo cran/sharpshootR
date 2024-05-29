@@ -1,3 +1,7 @@
+# sharpshootR 2.3.1 (2024-05-29)
+ * moving vegan to SUGGESTS
+ * CRAN release
+
 # sharpshootR 2.3 (2024-04-08)
  * CRAN release
  * `prepare_SSURGO_hydro_data()` now returns more soil property data
