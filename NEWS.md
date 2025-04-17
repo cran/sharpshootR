@@ -1,3 +1,12 @@
+# sharpshootR 2.4 (2025-04-16)
+ * breaking change: `plotProfileDendrogram()` moved to aqp
+ * breaking change: `aggregateColorPlot()` moved to aqp
+ * breaking change: removed deprecated functions `geomPosMountainProbability()`, `geomPosHillProbability()`, `surfaceShapeProbability()`, `hillslopeProbability()`
+ * `plotSoilRelationGraph()` no longer uses `set.seed(1010101)` for deterministic output
+   - be sure it set a seed just before calling for reproducible output
+ * update SPC fields from data derived from NASIS (via examples and soilDB data)
+ * CRAN release
+
 # sharpshootR 2.3.2 (2024-10-22)
  * rebuild `OSDexamples` with modern `SoilProfileCollection` object
  * CRAN release

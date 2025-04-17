@@ -26,6 +26,7 @@ importFrom(ape,
 )
 
 importFrom(aqp,
+           plotProfileDendrogram,
            plot,
            hzDistinctnessCodeToOffset,
            fixOverlap,
@@ -125,12 +126,9 @@ importFrom(RColorBrewer,
   brewer.pal
 )
 
-importFrom(plyr, 
-  join,
+importFrom(plyr,
   dlply,
-  ldply,
-  ddply,
-  summarise
+  ldply
 )
 
 

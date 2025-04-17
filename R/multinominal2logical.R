@@ -18,7 +18,7 @@
 #' 
 #' @author D.E. Beaudette
 #' 
-#' @seealso \code{\link{diagnosticPropertyPlot}}
+#' @seealso [diagnosticPropertyPlot()]
 #' 
 #' @keywords manip
 #' 
@@ -49,7 +49,7 @@
 #'   
 #'   # visualize with some other diagnostic features
 #'   x <- diagnosticPropertyPlot(loafercreek, v, k = 5, 
-#'                               grid.label = 'bedrckkind', dend.label = 'pedon_id')  
+#'                               grid.label = 'bedrckkind', dend.label = 'upedonid')  
 #' }
 
 #' 
@@ -80,7 +80,7 @@ multinominal2logical <- function(x, v) {
   fm <- paste0(idname(x), ' ~ ', v)
   
   # cast to wide format, filling non-NA entries with ID
-  w <- dcast(s, fm, value.var = id, drop=FALSE) 
+  w <- dcast(s, fm, value.var = id, drop = FALSE) 
   
   # not done yet, neet to convert into logical
   # first column is the ID
